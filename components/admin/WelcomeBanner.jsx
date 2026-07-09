@@ -61,13 +61,14 @@ export default function WelcomeBanner({ supabase, event, onNavigate }) {
       variants={staggerContainer(0.1, 0.05)}
       initial="hidden"
       animate="visible"
-      className="relative mb-8 overflow-hidden rounded-[2rem] bg-gradient-to-br from-rust via-terracotta to-rust-deep p-7 text-cream shadow-xl shadow-rust/20 sm:p-9"
+      className="relative mb-8 overflow-hidden rounded-[2rem] bg-gradient-to-br from-rust via-terracotta to-rust-deep text-cream shadow-xl shadow-rust/20"
     >
-      {/* Décor : halo et arche */}
+      {/* Décor : halo */}
       <div
         aria-hidden="true"
-        className="absolute -top-20 -right-16 h-64 w-64 rounded-full bg-blush/30 blur-3xl"
+        className="pointer-events-none absolute -top-20 -right-16 h-64 w-64 rounded-full bg-blush/25 blur-3xl"
       />
+      {/* Décor : arches flottantes (desktop uniquement) */}
       <div
         aria-hidden="true"
         className="absolute -right-6 -bottom-24 hidden h-72 w-56 rounded-t-full border border-cream/20 sm:block"
@@ -77,64 +78,92 @@ export default function WelcomeBanner({ supabase, event, onNavigate }) {
         className="absolute -right-1 -bottom-24 hidden h-64 w-46 rounded-t-full border border-cream/10 sm:block"
       />
 
-      <div className="relative flex flex-wrap items-center justify-between gap-6">
-        <div className="min-w-0">
-          <motion.p
-            variants={fadeUpItem}
-            className="text-[0.68rem] font-medium uppercase tracking-[0.3em] text-cream/70"
-          >
-            {greeting}, futurs mariés
-          </motion.p>
-          <motion.h1
-            variants={fadeUpItem}
-            className="mt-1.5 font-serif text-3xl font-medium italic sm:text-4xl"
-          >
-            {firstNames} <span className="not-italic">✨</span>
-          </motion.h1>
-          <motion.p variants={fadeUpItem} className="mt-2 text-sm font-light text-cream/80">
-            Votre grand jour se prépare ici —{" "}
-            <span className="capitalize">{formatDateFr(event.wedding_date)}</span>
-            {!event.date_confirmed && <em className="font-serif italic"> (à confirmer)</em>}.
-          </motion.p>
+      {/* ── Contenu principal ─────────────────────────────────────────── */}
+      <div className="relative px-6 pt-6 pb-4 sm:px-9 sm:pt-9 sm:pb-6">
+        {/* Ligne haute : texte + arche compte-à-rebours côte à côte */}
+        <div className="flex items-start justify-between gap-4">
+          {/* Texte */}
+          <div className="min-w-0 flex-1">
+            <motion.p
+              variants={fadeUpItem}
+              className="text-[0.65rem] font-medium uppercase tracking-[0.28em] text-cream/65 sm:text-[0.68rem] sm:tracking-[0.3em]"
+            >
+              {greeting}, futurs mariés
+            </motion.p>
+            <motion.h1
+              variants={fadeUpItem}
+              className="mt-1 font-serif text-2xl font-medium italic leading-tight sm:mt-1.5 sm:text-4xl"
+            >
+              {firstNames}{" "}
+              <span className="not-italic text-xl sm:text-3xl">✨</span>
+            </motion.h1>
+            <motion.p
+              variants={fadeUpItem}
+              className="mt-1.5 text-[0.78rem] font-light leading-relaxed text-cream/75 sm:mt-2 sm:text-sm sm:text-cream/80"
+            >
+              Votre grand jour se prépare ici —{" "}
+              <span className="capitalize">{formatDateFr(event.wedding_date)}</span>
+              {!event.date_confirmed && (
+                <em className="font-serif italic"> (à confirmer)</em>
+              )}.
+            </motion.p>
+          </div>
 
-          <motion.div variants={fadeUpItem} className="mt-5 flex flex-wrap gap-2.5">
-            {quickStats.map((stat) => (
-              <button
-                key={stat.key}
-                type="button"
-                onClick={() => onNavigate(stat.key)}
-                className="flex cursor-pointer items-center gap-2 rounded-full bg-cream/12 px-4 py-2 text-xs font-light backdrop-blur transition-colors hover:bg-cream/25"
-              >
-                <Icon name={stat.icon} className="h-3.5 w-3.5 opacity-80" />
-                <span className="font-medium tabular-nums">{stat.value ?? "…"}</span>
-                {stat.label}
-              </button>
-            ))}
+          {/* Compte à rebours dans une arche — toujours visible */}
+          <motion.div
+            variants={{
+              hidden: { opacity: 0, scale: 0.82, y: 16 },
+              visible: {
+                opacity: 1,
+                scale: 1,
+                y: 0,
+                transition: { type: "spring", stiffness: 200, damping: 18, delay: 0.25 },
+              },
+            }}
+            className="flex h-24 w-20 shrink-0 flex-col items-center justify-center rounded-t-full border border-cream/30 bg-cream/10 backdrop-blur-sm sm:h-36 sm:w-30"
+          >
+            <span className="font-serif text-2xl font-medium tabular-nums sm:text-4xl">
+              {dayLabel}
+            </span>
+            <span className="mt-0.5 flex flex-col items-center gap-0.5 text-center text-[0.5rem] font-medium uppercase tracking-[0.15em] text-cream/65 sm:mt-1 sm:flex-row sm:gap-1 sm:text-[0.6rem] sm:tracking-[0.2em]">
+              <Icon name="heart" className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+              <span className="sm:hidden">
+                {daysLeft > 0 ? "restants" : "🎉"}
+              </span>
+              <span className="hidden sm:inline">
+                {daysLeft > 0 ? "avant le oui" : "félicitations"}
+              </span>
+            </span>
           </motion.div>
         </div>
-
-        {/* Compte à rebours dans une arche */}
-        <motion.div
-          variants={{
-            hidden: { opacity: 0, scale: 0.8, y: 20 },
-            visible: {
-              opacity: 1,
-              scale: 1,
-              y: 0,
-              transition: { type: "spring", stiffness: 180, damping: 16, delay: 0.3 },
-            },
-          }}
-          className="flex h-32 w-27 shrink-0 flex-col items-center justify-center rounded-t-full border border-cream/30 bg-cream/10 backdrop-blur sm:h-36 sm:w-30"
-        >
-          <span className="font-serif text-3xl font-medium tabular-nums sm:text-4xl">
-            {dayLabel}
-          </span>
-          <span className="mt-1 flex items-center gap-1 text-[0.6rem] font-medium uppercase tracking-[0.2em] text-cream/70">
-            <Icon name="heart" className="h-3 w-3" />
-            {daysLeft > 0 ? "avant le oui" : "félicitations"}
-          </span>
-        </motion.div>
       </div>
+
+      {/* ── Statistiques rapides — bande défilante sur mobile ──────────── */}
+      <motion.div variants={fadeUpItem} className="relative">
+        {/* Fondu gauche/droite pour signaler le défilement */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-rust/50 to-transparent sm:hidden"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-rust-deep/50 to-transparent sm:hidden"
+        />
+        <div className="flex gap-2.5 overflow-x-auto px-6 pb-5 pt-0 [scrollbar-width:none] sm:flex-wrap sm:overflow-visible sm:px-9 sm:pb-7 [&::-webkit-scrollbar]:hidden">
+          {quickStats.map((stat) => (
+            <button
+              key={stat.key}
+              type="button"
+              onClick={() => onNavigate(stat.key)}
+              className="flex shrink-0 cursor-pointer items-center gap-2 rounded-full bg-cream/12 px-4 py-2 text-xs font-light backdrop-blur-sm transition-colors hover:bg-cream/25 active:scale-95"
+            >
+              <Icon name={stat.icon} className="h-3.5 w-3.5 opacity-80" />
+              <span className="font-medium tabular-nums">{stat.value ?? "…"}</span>
+              {stat.label}
+            </button>
+          ))}
+        </div>
+      </motion.div>
     </motion.section>
   );
 }
