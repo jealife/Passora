@@ -135,11 +135,11 @@ export default function GuestsManager({ supabase, eventId }) {
       {showBulk && (
         <div className="mb-6 space-y-3 rounded-2xl border border-terracotta/20 bg-champagne/40 p-5">
           <p className="text-sm font-light text-cocoa/70">
-            Collez votre liste — un nom complet par ligne. Les doublons sont ignorés.
+            Collez votre liste, un nom complet par ligne. Les doublons sont ignorés.
           </p>
           <TextArea
             rows={6}
-            placeholder={"Awa Diallo\nIbrahima Sory Camara\n…"}
+            placeholder={"Jean Mba\nArmand Obiang\n…"}
             value={bulk}
             onChange={(e) => setBulk(e.target.value)}
           />

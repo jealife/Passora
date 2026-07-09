@@ -95,7 +95,6 @@ export default function WelcomeBanner({ supabase, event, onNavigate }) {
               className="mt-1 font-serif text-2xl font-medium italic leading-tight sm:mt-1.5 sm:text-4xl"
             >
               {firstNames}{" "}
-              <span className="not-italic text-xl sm:text-3xl">✨</span>
             </motion.h1>
             <motion.p
               variants={fadeUpItem}
