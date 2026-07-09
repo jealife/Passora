@@ -30,11 +30,6 @@ export default function Footer({ event }) {
           </span>
           <span className="capitalize">{formatDateFr(event.wedding_date)}</span>
         </p>
-
-        <p className="mt-12 text-[0.65rem] font-light tracking-[0.2em] text-cream/30">
-          Fait avec <Icon name="heart" className="inline h-3 w-3 text-terracotta" /> pour nos
-          invités
-        </p>
       </FadeIn>
     </footer>
   );

@@ -185,7 +185,7 @@ export default function GuestsManager({ supabase, eventId }) {
         ))}
         {filtered.length === 0 && (
           <li className="px-4 py-8 text-center text-sm font-light text-cocoa/50">
-            {guests.length === 0 ? "Aucun invité — importez votre liste." : "Aucun résultat."}
+            {guests.length === 0 ? "Aucun invité pour le moment ." : "Aucun résultat."}
           </li>
         )}
       </ul>

@@ -101,7 +101,7 @@ export default function WelcomeBanner({ supabase, event, onNavigate }) {
               variants={fadeUpItem}
               className="mt-1.5 text-[0.78rem] font-light leading-relaxed text-cream/75 sm:mt-2 sm:text-sm sm:text-cream/80"
             >
-              Votre grand jour se prépare ici —{" "}
+              Votre grand jour se prépare ici : {" "}
               <span className="capitalize">{formatDateFr(event.wedding_date)}</span>
               {!event.date_confirmed && (
                 <em className="font-serif italic"> (à confirmer)</em>
