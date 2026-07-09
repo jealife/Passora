@@ -99,13 +99,17 @@ export default function VenuesManager({ supabase, eventId }) {
         </Card>
       ))}
 
-      <div className="flex items-center justify-between gap-4">
-        <AdminButton variant="subtle" icon="plus" onClick={addVenue}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4 border-t border-cocoa/5">
+        <AdminButton variant="subtle" icon="plus" onClick={addVenue} className="justify-center w-full sm:w-auto">
           Ajouter un lieu
         </AdminButton>
-        <div className="flex items-center gap-4">
-          {status && <Notice tone={status.tone}>{status.text}</Notice>}
-          <AdminButton icon="check" busy={busy} onClick={save}>
+        <div className="flex flex-col sm:flex-row sm:items-stretch sm:items-center gap-3">
+          {status && (
+            <div className="text-center sm:text-left flex-1 min-w-0">
+              <Notice tone={status.tone}>{status.text}</Notice>
+            </div>
+          )}
+          <AdminButton icon="check" busy={busy} onClick={save} className="justify-center w-full sm:w-auto">
             Enregistrer
           </AdminButton>
         </div>

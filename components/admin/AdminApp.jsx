@@ -16,12 +16,12 @@ import GuestsManager from "@/components/admin/GuestsManager";
 import RsvpList from "@/components/admin/RsvpList";
 
 const TABS = [
-  { key: "infos", label: "Informations", icon: "pencil" },
-  { key: "programme", label: "Programme", icon: "clock" },
-  { key: "lieux", label: "Lieux", icon: "map-pin" },
-  { key: "galerie", label: "Galerie", icon: "image" },
-  { key: "invites", label: "Invités", icon: "users" },
-  { key: "rsvp", label: "Confirmations", icon: "check" },
+  { key: "infos", label: "Informations", shortLabel: "Infos", icon: "pencil" },
+  { key: "programme", label: "Programme", shortLabel: "Prog.", icon: "clock" },
+  { key: "lieux", label: "Lieux", shortLabel: "Lieux", icon: "map-pin" },
+  { key: "galerie", label: "Galerie", shortLabel: "Galerie", icon: "image" },
+  { key: "invites", label: "Invités", shortLabel: "Invités", icon: "users" },
+  { key: "rsvp", label: "Confirmations", shortLabel: "RSVP", icon: "check" },
 ];
 
 /**
@@ -73,7 +73,7 @@ export default function AdminApp() {
               {initials.replace(/ /g, "")}
             </span>
             <div className="min-w-0">
-              <p className="truncate font-serif text-lg italic text-cocoa">
+              <p className="truncate font-serif text-base italic text-cocoa sm:text-lg">
                 {event ? `L’espace de ${initials}` : "Administration"}
               </p>
               <p className="hidden text-[0.6rem] font-medium uppercase tracking-[0.25em] text-cocoa/45 sm:block">
@@ -86,18 +86,26 @@ export default function AdminApp() {
               href="/"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium uppercase tracking-[0.15em] text-cocoa/60 transition-colors hover:bg-cocoa/5 hover:text-cocoa"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-cocoa/60 transition-colors hover:bg-cocoa/5 hover:text-cocoa sm:h-auto sm:w-auto sm:flex-row sm:gap-2 sm:px-4 sm:py-2 sm:text-xs sm:font-medium sm:uppercase sm:tracking-[0.15em]"
+              title="Voir le site"
             >
-              <Icon name="external-link" className="h-4 w-4" />
+              <Icon name="external-link" className="h-4.5 w-4.5 sm:h-4 sm:w-4" />
               <span className="hidden sm:inline">Voir le site</span>
             </a>
-            <AdminButton variant="subtle" icon="log-out" onClick={() => supabase.auth.signOut()}>
+            <AdminButton
+              variant="subtle"
+              icon="log-out"
+              onClick={() => supabase.auth.signOut()}
+              className="h-9 w-9 !p-0 justify-center sm:h-auto sm:w-auto sm:!px-5 sm:!py-2.5"
+              title="Déconnexion"
+            >
               <span className="hidden sm:inline">Déconnexion</span>
             </AdminButton>
           </div>
         </div>
 
-        <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-5 pb-3">
+        {/* Navigation du haut pour grand écran */}
+        <nav className="mx-auto hidden max-w-6xl gap-1 overflow-x-auto px-5 pb-3 sm:flex">
           {TABS.map((item) => (
             <button
               key={item.key}
@@ -124,7 +132,36 @@ export default function AdminApp() {
         </nav>
       </header>
 
-      <main className="mx-auto max-w-6xl px-5 py-8">
+      {/* Navigation basse fixe pour mobile */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-cocoa/10 bg-cream/95 pb-safe shadow-[0_-4px_12px_rgba(0,0,0,0.03)] backdrop-blur-md sm:hidden">
+        <div className="flex h-16 items-center justify-around px-2">
+          {TABS.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => setTab(item.key)}
+              className={classNames(
+                "flex flex-1 flex-col items-center justify-center gap-1.5 py-1 text-center transition-colors relative h-full",
+                tab === item.key ? "text-rust" : "text-cocoa/50",
+              )}
+            >
+              {tab === item.key && (
+                <motion.span
+                  layoutId="admin-tab-pill-mobile"
+                  className="absolute top-0 h-0.5 w-10 rounded-full bg-rust"
+                  transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                />
+              )}
+              <Icon name={item.icon} className="h-5 w-5" />
+              <span className="text-[0.58rem] font-medium tracking-wider uppercase leading-none">
+                {item.shortLabel}
+              </span>
+            </button>
+          ))}
+        </div>
+      </nav>
+
+      <main className="mx-auto max-w-6xl px-4 py-6 pb-28 sm:px-5 sm:py-8">
         {!event ? (
           <Card title="Aucun événement trouvé">
             <p className="text-sm font-light text-cocoa/70">

@@ -120,7 +120,12 @@ export default function GuestsManager({ supabase, eventId }) {
       title={`Invités (${guests.length})`}
       description="Le formulaire de confirmation n'accepte que les noms de cette liste."
       actions={
-        <AdminButton variant="subtle" icon="upload" onClick={() => setShowBulk((v) => !v)}>
+        <AdminButton
+          variant="subtle"
+          icon="upload"
+          onClick={() => setShowBulk((v) => !v)}
+          className="w-full sm:w-auto text-[10px] sm:text-xs justify-center"
+        >
           Import en masse
         </AdminButton>
       }
@@ -138,19 +143,20 @@ export default function GuestsManager({ supabase, eventId }) {
             value={bulk}
             onChange={(e) => setBulk(e.target.value)}
           />
-          <AdminButton icon="check" busy={busy} onClick={importBulk}>
+          <AdminButton icon="check" busy={busy} onClick={importBulk} className="w-full sm:w-auto justify-center">
             Importer
           </AdminButton>
         </div>
       )}
 
-      <form onSubmit={addOne} className="mb-5 flex gap-3">
+      <form onSubmit={addOne} className="mb-5 flex flex-col sm:flex-row gap-2">
         <Input
           placeholder="Ajouter un invité (prénom et nom)"
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
+          className="w-full"
         />
-        <AdminButton icon="plus" busy={busy} onClick={addOne} type="submit">
+        <AdminButton icon="plus" busy={busy} onClick={addOne} type="submit" className="w-full sm:w-auto justify-center">
           Ajouter
         </AdminButton>
       </form>

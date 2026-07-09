@@ -176,9 +176,13 @@ export default function EventForm({ supabase, event, onSaved }) {
         </div>
       </Card>
 
-      <div className="sticky bottom-4 flex items-center justify-end gap-4 rounded-full border border-cocoa/10 bg-cream/95 px-4 py-3 shadow-lg backdrop-blur">
-        {status && <Notice tone={status.tone}>{status.text}</Notice>}
-        <AdminButton icon="check" busy={busy} onClick={save}>
+      <div className="sticky bottom-[4.5rem] sm:bottom-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between sm:justify-end gap-3 rounded-2xl sm:rounded-full border border-cocoa/10 bg-cream/95 p-3 sm:px-4 sm:py-3 shadow-lg backdrop-blur-md z-20">
+        {status && (
+          <div className="text-center sm:text-left flex-1 min-w-0">
+            <Notice tone={status.tone}>{status.text}</Notice>
+          </div>
+        )}
+        <AdminButton icon="check" busy={busy} onClick={save} className="justify-center py-3 sm:py-2.5">
           Enregistrer
         </AdminButton>
       </div>
