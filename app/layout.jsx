@@ -16,7 +16,14 @@ const jost = Jost({
   display: "swap",
 });
 
+// URL publique du site — ignore la valeur d'exemple non renseignée.
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL && !process.env.NEXT_PUBLIC_SITE_URL.includes("votre-")
+    ? process.env.NEXT_PUBLIC_SITE_URL
+    : "http://localhost:3000";
+
 export const metadata = {
+  metadataBase: new URL(siteUrl),
   title: "Myrna & Jaël — Notre mariage",
   description:
     "Myrna Rychka & Jael Fidèle vous invitent à célébrer leur union. Retrouvez le programme, les lieux et confirmez votre présence.",
