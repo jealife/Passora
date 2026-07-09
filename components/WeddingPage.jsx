@@ -28,7 +28,7 @@ export default function WeddingPage({ data }) {
       <Gallery images={gallery} />
       <Program program={program} />
       <Venues venues={venues} />
-      <DressCode event={event} />
+      {/* <DressCode event={event} /> */}
       <MarqueeBand event={event} />
       <Rsvp eventSlug={event.slug} />
       <Footer event={event} />

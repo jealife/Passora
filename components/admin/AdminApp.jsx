@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Icon from "@/components/ui/Icons";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -35,6 +35,16 @@ export default function AdminApp() {
   const [event, setEvent] = useState(null);
   const [tab, setTab] = useState("infos");
 
+  // ── Service Worker ────────────────────────────────────────────────────────
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("/sw.js", { scope: "/admin/" })
+        .catch(() => {}); // silencieux si HTTPS absent (dev local)
+    }
+  }, []);
+
+  // ── Auth ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!supabase) return;
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -161,6 +171,7 @@ export default function AdminApp() {
         </div>
       </nav>
 
+      <InstallBanner />
       <main className="mx-auto max-w-6xl px-4 py-6 pb-28 sm:px-5 sm:py-8">
         {!event ? (
           <Card title="Aucun événement trouvé">
@@ -196,6 +207,66 @@ export default function AdminApp() {
         )}
       </main>
     </div>
+  );
+}
+
+/**
+ * Bandeau d'installation PWA — affiché uniquement sur iOS Safari
+ * quand l'app n'est pas encore ajoutée à l'écran d'accueil.
+ * Dismissible ; la décision est mémorisée dans localStorage.
+ */
+function InstallBanner() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem("pwa-banner-dismissed")) return;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
+    if (isIOS && !isStandalone) setVisible(true);
+  }, []);
+
+  const dismiss = () => {
+    localStorage.setItem("pwa-banner-dismissed", "1");
+    setVisible(false);
+  };
+
+  if (!visible) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 12 }}
+        transition={{ duration: 0.4, ease: EASE }}
+        className="fixed bottom-20 left-4 right-4 z-50 flex items-start gap-3 rounded-2xl border border-terracotta/20 bg-cream/95 px-4 py-3 shadow-lg backdrop-blur-md sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-xs"
+        role="status"
+        aria-live="polite"
+      >
+        <span
+          className="flex h-10 w-8 shrink-0 items-end justify-center rounded-t-full border border-terracotta/40 bg-champagne/60 pb-1 font-serif text-xs italic text-rust"
+          aria-hidden="true"
+        >
+          M&amp;J
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-medium text-cocoa">Ajouter à l'écran d'accueil</p>
+          <p className="mt-0.5 text-[0.65rem] leading-relaxed text-cocoa/60">
+            Appuyez sur <span aria-label="Partager">⎋</span> puis{" "}
+            <strong className="font-medium">Sur l'écran d'accueil</strong>{" "}
+            <span aria-label="Plus">➕</span>
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={dismiss}
+          className="shrink-0 text-cocoa/40 transition-colors hover:text-cocoa"
+          aria-label="Fermer"
+        >
+          <Icon name="x" className="h-4 w-4" />
+        </button>
+      </motion.div>
+    </AnimatePresence>
   );
 }
 
