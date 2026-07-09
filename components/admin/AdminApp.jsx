@@ -174,12 +174,7 @@ export default function AdminApp() {
       <InstallBanner />
       <main className="mx-auto max-w-6xl px-4 py-6 pb-28 sm:px-5 sm:py-8">
         {!event ? (
-          <Card title="Aucun événement trouvé">
-            <p className="text-sm font-light text-cocoa/70">
-              Exécutez le script{" "}
-              <code className="rounded bg-cocoa/8 px-1.5 py-0.5">supabase/schema.sql</code> dans
-              l’éditeur SQL de Supabase pour créer les tables et l’événement initial.
-            </p>
+          <Card title="Création de votre événement...">
           </Card>
         ) : (
           <>
