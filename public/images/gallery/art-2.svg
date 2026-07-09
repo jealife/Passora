@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
+<rect width="800" height="1000" fill="#e9dcbc"/>
+
+  <path d="M100 640 a300 300 0 0 1 600 0 Z" fill="#a63d32"/>
+  <path d="M190 640 a210 210 0 0 1 420 0 Z" fill="#e89a8d"/>
+  <path d="M280 640 a120 120 0 0 1 240 0 Z" fill="#faf6ef"/>
+  <line x1="106" y1="490" x2="53" y2="463" stroke="#b76950" stroke-width="5" stroke-linecap="round"/><line x1="158" y1="416" x2="114" y2="375" stroke="#b76950" stroke-width="5" stroke-linecap="round"/><line x1="228" y1="359" x2="196" y2="307" stroke="#b76950" stroke-width="5" stroke-linecap="round"/><line x1="310" y1="322" x2="294" y2="265" stroke="#b76950" stroke-width="5" stroke-linecap="round"/><line x1="400" y1="310" x2="400" y2="250" stroke="#b76950" stroke-width="5" stroke-linecap="round"/><line x1="490" y1="322" x2="506" y2="265" stroke="#b76950" stroke-width="5" stroke-linecap="round"/><line x1="572" y1="359" x2="604" y2="307" stroke="#b76950" stroke-width="5" stroke-linecap="round"/><line x1="642" y1="416" x2="686" y2="375" stroke="#b76950" stroke-width="5" stroke-linecap="round"/><line x1="694" y1="490" x2="747" y2="463" stroke="#b76950" stroke-width="5" stroke-linecap="round"/>
+  <rect x="100" y="660" width="600" height="10" rx="5" fill="#7a4a2f" opacity="0.5"/>
+  <rect x="170" y="710" width="460" height="8" rx="4" fill="#7a4a2f" opacity="0.3"/>
+</svg>

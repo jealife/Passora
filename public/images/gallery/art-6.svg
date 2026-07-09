@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
+<rect width="800" height="1000" fill="#f4ecdf"/>
+
+  <circle cx="330" cy="420" r="86" fill="#a63d32" opacity="0.92"/><circle cx="330" cy="420" r="36" fill="#faf6ef" opacity="0.85"/><circle cx="470" cy="360" r="64" fill="#e89a8d" opacity="0.92"/><circle cx="470" cy="360" r="27" fill="#faf6ef" opacity="0.85"/><circle cx="520" cy="500" r="74" fill="#b76950" opacity="0.92"/><circle cx="520" cy="500" r="31" fill="#faf6ef" opacity="0.85"/><circle cx="360" cy="580" r="58" fill="#8a8b62" opacity="0.92"/><circle cx="360" cy="580" r="24" fill="#faf6ef" opacity="0.85"/><circle cx="480" cy="640" r="44" fill="#a63d32" opacity="0.92"/><circle cx="480" cy="640" r="18" fill="#faf6ef" opacity="0.85"/><circle cx="300" cy="300" r="48" fill="#e89a8d" opacity="0.92"/><circle cx="300" cy="300" r="20" fill="#faf6ef" opacity="0.85"/>
+  <path d="M400 900 C 390 800, 410 720, 400 660" stroke="#8a8b62" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="M400 780 q -50 -14 -84 16 q 46 30 84 -16" fill="#8a8b62"/>
+  <path d="M400 730 q 50 -14 84 16 q -46 30 -84 -16" fill="#8a8b62" opacity="0.8"/>
+</svg>

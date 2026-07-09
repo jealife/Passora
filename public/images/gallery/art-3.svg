@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000">
+<rect width="800" height="1000" fill="#f4ecdf"/>
+
+  <path d="M400 900 C 380 700, 420 400, 400 120" stroke="#8a8b62" stroke-width="7" fill="none" stroke-linecap="round"/>
+  
+    <path d="M400 220 q -60 -18 -118 8 q 60 36 118 -8" fill="#8a8b62" opacity="0.85"/>
+    <path d="M400 260 q 60 -18 118 8 q -60 36 -118 -8" fill="#8a8b62" opacity="0.7"/>
+    <path d="M400 310 q -74 -18 -132 8 q 74 36 132 -8" fill="#8a8b62" opacity="0.7999999999999999"/>
+    <path d="M400 350 q 74 -18 132 8 q -74 36 -132 -8" fill="#8a8b62" opacity="0.6599999999999999"/>
+    <path d="M400 400 q -88 -18 -146 8 q 88 36 146 -8" fill="#8a8b62" opacity="0.75"/>
+    <path d="M400 440 q 88 -18 146 8 q -88 36 -146 -8" fill="#8a8b62" opacity="0.62"/>
+    <path d="M400 490 q -60 -18 -118 8 q 60 36 118 -8" fill="#8a8b62" opacity="0.7"/>
+    <path d="M400 530 q 60 -18 118 8 q -60 36 -118 -8" fill="#8a8b62" opacity="0.58"/>
+    <path d="M400 580 q -74 -18 -132 8 q 74 36 132 -8" fill="#8a8b62" opacity="0.6499999999999999"/>
+    <path d="M400 620 q 74 -18 132 8 q -74 36 -132 -8" fill="#8a8b62" opacity="0.5399999999999999"/>
+    <path d="M400 670 q -88 -18 -146 8 q 88 36 146 -8" fill="#8a8b62" opacity="0.6"/>
+    <path d="M400 710 q 88 -18 146 8 q -88 36 -146 -8" fill="#8a8b62" opacity="0.49999999999999994"/>
+    <path d="M400 760 q -60 -18 -118 8 q 60 36 118 -8" fill="#8a8b62" opacity="0.5499999999999999"/>
+    <path d="M400 800 q 60 -18 118 8 q -60 36 -118 -8" fill="#8a8b62" opacity="0.45999999999999996"/>
+  <circle cx="400" cy="150" r="26" fill="#b76950"/>
+  <circle cx="360" cy="196" r="16" fill="#e89a8d"/>
+  <circle cx="443" cy="200" r="12" fill="#a63d32"/>
+</svg>
