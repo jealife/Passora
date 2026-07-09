@@ -137,7 +137,7 @@ export default function Rsvp({ eventSlug }) {
             <Ornament className="text-blush-soft" />
           </div>
           <p className="mx-auto mt-6 max-w-md text-sm leading-relaxed font-light text-cream/75">
-            Indiquez le nom figurant sur votre invitation — nous le retrouverons
+            Indiquez le nom figurant sur votre invitation, nous le retrouverons
             sur notre liste d’invités.
           </p>
         </FadeIn>
