@@ -27,18 +27,12 @@ const siteUrl =
     : "http://localhost:3000";
 
 /**
- * Métadonnées générées dynamiquement : l'image OpenGraph reprend automatiquement
- * l'image hero de l'événement (hero_image_url) si elle est définie dans Supabase.
- * Sinon, on utilise l'image de repli statique (/og-image.jpg).
+ * Métadonnées générées dynamiquement depuis les données de l'événement.
+ * L'image OpenGraph est gérée automatiquement par app/opengraph-image.jsx
+ * (Next.js file-based convention) — aucune surcharge ici.
  */
 export async function generateMetadata() {
   const { event } = await getEventData(DEFAULT_EVENT_SLUG);
-
-  // Image hero depuis Supabase, ou fallback statique (photo des alliances)
-  const ogImageUrl =
-    event.hero_image_url && event.hero_image_url.startsWith("http")
-      ? event.hero_image_url
-      : `${siteUrl}/og-image.jpg`;
 
   const title = `${event.bride_name} & ${event.groom_name} — Notre mariage`;
   const description =
@@ -56,21 +50,11 @@ export async function generateMetadata() {
       locale: "fr_FR",
       url: siteUrl,
       siteName: `Mariage ${event.bride_name} & ${event.groom_name}`,
-      images: [
-        {
-          url: ogImageUrl,
-          width: 1200,
-          height: 800,
-          alt: title,
-          type: ogImageUrl.endsWith(".png") ? "image/png" : "image/jpeg",
-        },
-      ],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: [ogImageUrl],
     },
   };
 }
