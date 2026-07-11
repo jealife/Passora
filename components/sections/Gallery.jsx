@@ -134,7 +134,7 @@ export default function Gallery({ images = [] }) {
             </div>
             <p className="mt-4 text-sm font-light text-cocoa/60">
               {immersive
-                ? "Continuez à défiler — les souvenirs avancent avec vous."
+                ? "Continuez à défiler, les souvenirs avancent avec vous."
                 : "Faites défiler horizontalement pour parcourir nos souvenirs."}
             </p>
           </motion.div>

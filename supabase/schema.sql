@@ -24,8 +24,6 @@ create table if not exists public.events (
   story_title          text default 'Notre histoire',
   story_text           text default '',
   story_audio_url      text default '',
-  dress_code_title     text default '',
-  dress_code_image_url text default '',
   footer_message       text default '',
   created_at           timestamptz not null default now(),
   updated_at           timestamptz not null default now()
@@ -142,7 +140,7 @@ create policy "guests_admin_all"    on public.guests  for all to authenticated u
 create policy "rsvp_admin_all"      on public.rsvp    for all to authenticated using (true) with check (true);
 
 -- ----------------------------------------------------------------------------
--- 3. Stockage (photos : hero + galerie)
+-- 3. Stockage (photos : hero + galerie ; musique d'ambiance)
 -- ----------------------------------------------------------------------------
 
 insert into storage.buckets (id, name, public)
@@ -172,8 +170,7 @@ create policy "wedding_admin_delete" on storage.objects
 
 insert into public.events
   (slug, name, bride_name, groom_name, tagline, wedding_date, date_confirmed,
-   story_title, story_text, story_audio_url, dress_code_title,
-   dress_code_image_url, footer_message)
+   story_title, story_text, story_audio_url, footer_message)
 values (
   'myrna-jael',
   'Mariage de Myrna & Jaël',
@@ -183,10 +180,8 @@ values (
   '2026-09-12T08:00:00+00',   -- date provisoire, à ajuster dans l'administration
   false,
   'Notre histoire',
-  'Deux chemins qui se croisent, un regard qui s''attarde, et la vie qui, doucement, écrit la plus belle des évidences. Appuyez sur lecture et laissez-nous vous raconter notre histoire, avec nos mots et avec le cœur.',
-  '/audio/notre-histoire.mp3',
-  'Terracota en couleurs',
-  '/images/dresscode.jpeg',
+  'Une personne peut tomber, deux peuvent se relever, mais trois liés par Dieu deviennent difficiles à briser.',
+  '/audio/ambiance.mp3',
   'Une urne nuptiale sera mise à votre disposition. Votre présence à nos côtés sera notre plus beau cadeau.'
 )
 on conflict (slug) do nothing;

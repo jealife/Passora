@@ -8,11 +8,6 @@ import { ImageResponse } from "next/og";
 
 export const OG_SIZE = { width: 1200, height: 630 };
 
-const PALETTE = [
-  "#E89A8D", "#B76950", "#A63D32", "#E9DCBC",
-  "#B9BDC1", "#8A8B62", "#E3D3A9", "#7A4A2F",
-];
-
 /** Récupère une police Google Fonts (format TTF) limitée aux glyphes utiles. */
 async function loadGoogleFont(family, text) {
   const url = `https://fonts.googleapis.com/css2?family=${family}&text=${encodeURIComponent(text)}`;
@@ -202,29 +197,6 @@ export async function renderOgImage(event) {
             {dateLabel}
           </div>
         ) : null}
-
-        {/* Nuancier du dress code */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 42,
-            display: "flex",
-            gap: 12,
-          }}
-        >
-          {PALETTE.map((hex) => (
-            <div
-              key={hex}
-              style={{
-                width: 17,
-                height: 17,
-                borderRadius: 999,
-                backgroundColor: hex,
-                border: "2px solid rgba(250, 246, 239, 0.9)",
-              }}
-            />
-          ))}
-        </div>
       </div>
     ),
     { ...OG_SIZE, fonts },

@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import Image from "next/image";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { useWelcome } from "@/components/layout/WelcomeContext";
 import Button from "@/components/ui/Button";
 import Icon from "@/components/ui/Icons";
 import Ornament from "@/components/ui/Ornament";
@@ -11,9 +12,10 @@ import { formatDateFr, formatTimeFr } from "@/lib/utils";
 
 /**
  * Hero plein écran immersif : photo des mariés (administrable) ou
- * composition graphique terracotta ; entrée en cascade au chargement
- * et parallaxe au défilement — le décor glisse plus lentement que le
- * contenu, qui s'élève et s'estompe en quittant l'écran.
+ * composition graphique terracotta ; entrée en cascade jouée quand
+ * l'invité quitte l'écran de bienvenue, et parallaxe au défilement —
+ * le décor glisse plus lentement que le contenu, qui s'élève et
+ * s'estompe en quittant l'écran.
  */
 export default function Hero({ event, venueName }) {
   const hasPhoto = Boolean(event.hero_image_url);
@@ -22,6 +24,10 @@ export default function Hero({ event, venueName }) {
 
   const sectionRef = useRef(null);
   const reduceMotion = useReducedMotion();
+  // La cascade d'entrée attend la fermeture de l'écran de bienvenue,
+  // sinon elle se joue invisible, derrière lui.
+  const { entered } = useWelcome();
+  const revealed = reduceMotion || entered;
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end start"],
@@ -75,17 +81,17 @@ export default function Hero({ event, venueName }) {
               animate={reduceMotion ? undefined : { y: [0, -16, 0], x: [0, -12, 0] }}
               transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 3 }}
             />
-            {/* Grande arche architecturale qui s'ouvre au chargement */}
+            {/* Grande arche architecturale qui s'ouvre à l'entrée */}
             <motion.div
               className="absolute top-1/2 left-1/2 h-[78%] w-[min(92vw,40rem)] rounded-t-full border border-terracotta/25"
               initial={reduceMotion ? false : { opacity: 0, scale: 0.92, x: "-50%", y: "-50%" }}
-              animate={{ opacity: 1, scale: 1, x: "-50%", y: "-50%" }}
+              animate={revealed ? { opacity: 1, scale: 1, x: "-50%", y: "-50%" } : undefined}
               transition={{ duration: 1.6, ease: EASE, delay: 0.2 }}
             />
             <motion.div
               className="absolute top-1/2 left-1/2 h-[74%] w-[min(86vw,37rem)] rounded-t-full border border-terracotta/15"
               initial={reduceMotion ? false : { opacity: 0, scale: 0.88, x: "-50%", y: "-50%" }}
-              animate={{ opacity: 1, scale: 1, x: "-50%", y: "-50%" }}
+              animate={revealed ? { opacity: 1, scale: 1, x: "-50%", y: "-50%" } : undefined}
               transition={{ duration: 1.6, ease: EASE, delay: 0.35 }}
             />
           </>
@@ -98,7 +104,7 @@ export default function Hero({ event, venueName }) {
         style={reduceMotion ? undefined : { y: contentY, opacity: contentOpacity }}
         variants={staggerContainer(0.16, 0.3)}
         initial={reduceMotion ? false : "hidden"}
-        animate="visible"
+        animate={revealed ? "visible" : "hidden"}
       >
         <motion.p
           variants={fadeUpItem}
@@ -197,7 +203,7 @@ export default function Hero({ event, venueName }) {
           hasPhoto ? "text-cream/70" : "text-cocoa/40"
         }`}
         initial={reduceMotion ? false : { opacity: 0 }}
-        animate={{ opacity: 1 }}
+        animate={revealed ? { opacity: 1 } : undefined}
         transition={{ delay: 1.8, duration: 1 }}
       >
         <motion.span

@@ -9,7 +9,6 @@ const LINKS = [
   { href: "#galerie", label: "Galerie" },
   { href: "#programme", label: "Programme" },
   { href: "#lieux", label: "Lieux" },
-  // { href: "#dresscode", label: "Dress code" },
 ];
 
 /**

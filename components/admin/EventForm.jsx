@@ -25,13 +25,12 @@ export default function EventForm({ supabase, event, onSaved }) {
     story_title: event.story_title || "",
     story_text: event.story_text || "",
     story_audio_url: event.story_audio_url || "",
-    dress_code_title: event.dress_code_title || "",
-    dress_code_image_url: event.dress_code_image_url || "",
     footer_message: event.footer_message || "",
   });
   const [status, setStatus] = useState(null);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingMusic, setUploadingMusic] = useState(false);
 
   const set = (key) => (e) =>
     setForm((f) => ({ ...f, [key]: e.target.type === "checkbox" ? e.target.checked : e.target.value }));
@@ -51,6 +50,24 @@ export default function EventForm({ supabase, event, onSaved }) {
       setStatus({ tone: "success", text: "Photo téléversée — pensez à enregistrer." });
     }
     setUploading(false);
+    e.target.value = "";
+  };
+
+  const uploadMusic = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingMusic(true);
+    setStatus(null);
+    const path = `${event.id}/ambiance-${Date.now()}-${file.name.replace(/[^\w.-]/g, "_")}`;
+    const { error } = await supabase.storage.from("wedding").upload(path, file, { upsert: true });
+    if (error) {
+      setStatus({ tone: "error", text: `Échec du téléversement : ${error.message}` });
+    } else {
+      const { data } = supabase.storage.from("wedding").getPublicUrl(path);
+      setForm((f) => ({ ...f, story_audio_url: data.publicUrl }));
+      setStatus({ tone: "success", text: "Musique téléversée — pensez à enregistrer." });
+    }
+    setUploadingMusic(false);
     e.target.value = "";
   };
 
@@ -148,32 +165,46 @@ export default function EventForm({ supabase, event, onSaved }) {
         </div>
       </Card>
 
-      <Card title="Notre histoire" description="Texte de présentation et bande audio.">
+      <Card
+        title="Notre histoire"
+        description="Titre de la section et musique d'ambiance lue en boucle à l'ouverture de la page."
+      >
         <div className="space-y-5">
           <Field label="Titre de la section">
             <Input value={form.story_title} onChange={set("story_title")} />
           </Field>
-          <Field label="Texte de présentation">
-            <TextArea rows={4} value={form.story_text} onChange={set("story_text")} />
-          </Field>
-          <Field label="URL de l'audio" hint="Fichier MP3 — par défaut : /audio/notre-histoire.mp3">
-            <Input value={form.story_audio_url} onChange={set("story_audio_url")} />
+          <Field
+            label="Musique d'ambiance"
+            hint="Fichier audio (MP3 recommandé). Sans musique téléversée, le morceau par défaut est joué."
+          >
+            <div className="space-y-3">
+              {form.story_audio_url && (
+                <audio controls src={form.story_audio_url} className="w-full max-w-md" />
+              )}
+              <div className="flex flex-wrap items-center gap-3">
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-cocoa/5 px-5 py-2.5 text-xs font-medium uppercase tracking-[0.15em] text-cocoa transition-colors hover:bg-cocoa/10">
+                  <input type="file" accept="audio/*" onChange={uploadMusic} className="hidden" />
+                  {uploadingMusic ? "Téléversement…" : "Téléverser une musique"}
+                </label>
+                {form.story_audio_url && (
+                  <AdminButton
+                    variant="danger"
+                    icon="trash"
+                    onClick={() => setForm((f) => ({ ...f, story_audio_url: "" }))}
+                  >
+                    Retirer la musique
+                  </AdminButton>
+                )}
+              </div>
+            </div>
           </Field>
         </div>
       </Card>
 
-      <Card title="Dress code & mot de la fin">
-        <div className="space-y-5">
-          <Field label="Titre du dress code">
-            <Input value={form.dress_code_title} onChange={set("dress_code_title")} />
-          </Field>
-          <Field label="URL de l'image du moodboard">
-            <Input value={form.dress_code_image_url} onChange={set("dress_code_image_url")} />
-          </Field>
-          <Field label="Message de fin (pied de page)">
-            <TextArea rows={3} value={form.footer_message} onChange={set("footer_message")} />
-          </Field>
-        </div>
+      <Card title="Mot de la fin">
+        <Field label="Message de fin (pied de page)">
+          <TextArea rows={3} value={form.footer_message} onChange={set("footer_message")} />
+        </Field>
       </Card>
 
       <div className="sticky bottom-[4.5rem] sm:bottom-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between sm:justify-end gap-3 rounded-2xl sm:rounded-full border border-cocoa/10 bg-cream/95 p-3 sm:px-4 sm:py-3 shadow-lg backdrop-blur-md z-20">
