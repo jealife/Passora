@@ -29,6 +29,10 @@ export default function Footer({ event }) {
             ·
           </span>
           <span className="capitalize">{formatDateFr(event.wedding_date)}</span>
+          <br />
+          <div className="mt-2 text-[0.72rem] font-light uppercase tracking-[0.3em] text-cream/50 py-4">
+            <span className="italic mt-20">Made by Passora</span>
+          </div>
         </p>
       </FadeIn>
     </footer>
