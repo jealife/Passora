@@ -11,7 +11,9 @@ import { Card, Field, Input, Notice } from "@/components/admin/ui";
  *
  * Accès protégé par Supabase Auth (comptes créés dans le tableau de bord
  * Supabase) ; toutes les écritures sont en outre verrouillées par RLS.
- * Ne rend `children(supabase)` qu'une fois une session valide établie.
+ * Ne rend `children(session)` qu'une fois une session valide établie —
+ * `session.user.id` et `session.user.app_metadata.role` servent à distinguer
+ * un compte agence (accès à tout) d'un compte couple (son événement seul).
  */
 export default function AdminAuthGate({ supabase, children }) {
   const [session, setSession] = useState(undefined); // undefined = chargement
@@ -29,7 +31,7 @@ export default function AdminAuthGate({ supabase, children }) {
   if (session === undefined) return <FullPageLoader />;
   if (!session) return <LoginForm supabase={supabase} />;
 
-  return children;
+  return children(session);
 }
 
 export function FullPageLoader() {

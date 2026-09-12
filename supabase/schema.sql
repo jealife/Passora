@@ -25,6 +25,9 @@ create table if not exists public.events (
   story_text           text default '',
   story_audio_url      text default '',
   footer_message       text default '',
+  -- Compte (Supabase Auth) du couple propriétaire de cet événement.
+  -- Nul tant qu'aucun compte ne lui a été assigné (accès agence uniquement).
+  owner_id             uuid references auth.users(id) on delete set null,
   created_at           timestamptz not null default now(),
   updated_at           timestamptz not null default now()
 );
@@ -96,14 +99,25 @@ create trigger events_updated_at
   before update on public.events
   for each row execute function public.set_updated_at();
 
+-- Vrai pour un compte agence (super-admin) : accès total à tous les
+-- événements, porté par app_metadata (jamais user_metadata, modifiable
+-- par l'utilisateur) sur son compte Supabase Auth.
+create or replace function public.is_agency()
+returns boolean
+language sql stable
+as $$
+  select coalesce((auth.jwt() -> 'app_metadata' ->> 'role') = 'agency', false);
+$$;
+
 -- ----------------------------------------------------------------------------
 -- 2. Sécurité (Row Level Security)
 --
---   * Contenu public (events, program, venues, gallery) : lecture pour tous,
---     écriture réservée aux utilisateurs authentifiés (l'administration).
---   * guests et rsvp : AUCUN accès public. Le formulaire RSVP passe par
---     l'API du site (clé service role, côté serveur uniquement) ; seule
---     l'administration authentifiée peut les consulter.
+--   * Contenu public (events, program, venues, gallery) : lecture pour tous ;
+--     écriture réservée à l'agence ou au couple propriétaire de l'événement.
+--   * guests et rsvp : AUCUN accès public, ni en lecture ni en écriture.
+--     Le formulaire RSVP passe par l'API du site (clé service role, côté
+--     serveur uniquement) ; seuls l'agence et le couple propriétaire
+--     peuvent les consulter/gérer depuis l'administration.
 -- ----------------------------------------------------------------------------
 
 alter table public.events  enable row level security;
@@ -119,6 +133,9 @@ drop policy if exists "program_public_read" on public.program;
 drop policy if exists "venues_public_read"  on public.venues;
 drop policy if exists "gallery_public_read" on public.gallery;
 drop policy if exists "events_admin_write"  on public.events;
+drop policy if exists "events_agency_insert" on public.events;
+drop policy if exists "events_owner_update"  on public.events;
+drop policy if exists "events_agency_delete" on public.events;
 drop policy if exists "program_admin_write" on public.program;
 drop policy if exists "venues_admin_write"  on public.venues;
 drop policy if exists "gallery_admin_write" on public.gallery;
@@ -131,13 +148,67 @@ create policy "program_public_read" on public.program for select using (true);
 create policy "venues_public_read"  on public.venues  for select using (true);
 create policy "gallery_public_read" on public.gallery for select using (true);
 
--- Écriture / gestion réservée aux comptes authentifiés (administration)
-create policy "events_admin_write"  on public.events  for all to authenticated using (true) with check (true);
-create policy "program_admin_write" on public.program for all to authenticated using (true) with check (true);
-create policy "venues_admin_write"  on public.venues  for all to authenticated using (true) with check (true);
-create policy "gallery_admin_write" on public.gallery for all to authenticated using (true) with check (true);
-create policy "guests_admin_all"    on public.guests  for all to authenticated using (true) with check (true);
-create policy "rsvp_admin_all"      on public.rsvp    for all to authenticated using (true) with check (true);
+-- events : créer un événement est réservé à l'agence ; le modifier/le
+-- supprimer est ouvert à l'agence ou au couple propriétaire (delete réservé
+-- à l'agence pour éviter qu'un couple supprime son propre événement par erreur).
+create policy "events_agency_insert" on public.events
+  for insert to authenticated with check (public.is_agency());
+
+create policy "events_owner_update" on public.events
+  for update to authenticated
+  using (public.is_agency() or owner_id = auth.uid())
+  with check (public.is_agency() or owner_id = auth.uid());
+
+create policy "events_agency_delete" on public.events
+  for delete to authenticated using (public.is_agency());
+
+-- program / venues / gallery : agence ou propriétaire de l'événement parent
+create policy "program_admin_write" on public.program
+  for all to authenticated
+  using (public.is_agency() or exists (
+    select 1 from public.events e where e.id = program.event_id and e.owner_id = auth.uid()
+  ))
+  with check (public.is_agency() or exists (
+    select 1 from public.events e where e.id = program.event_id and e.owner_id = auth.uid()
+  ));
+
+create policy "venues_admin_write" on public.venues
+  for all to authenticated
+  using (public.is_agency() or exists (
+    select 1 from public.events e where e.id = venues.event_id and e.owner_id = auth.uid()
+  ))
+  with check (public.is_agency() or exists (
+    select 1 from public.events e where e.id = venues.event_id and e.owner_id = auth.uid()
+  ));
+
+create policy "gallery_admin_write" on public.gallery
+  for all to authenticated
+  using (public.is_agency() or exists (
+    select 1 from public.events e where e.id = gallery.event_id and e.owner_id = auth.uid()
+  ))
+  with check (public.is_agency() or exists (
+    select 1 from public.events e where e.id = gallery.event_id and e.owner_id = auth.uid()
+  ));
+
+-- guests / rsvp : agence ou propriétaire de l'événement parent, en lecture
+-- ET en écriture (aucune policy de lecture publique sur ces deux tables)
+create policy "guests_admin_all" on public.guests
+  for all to authenticated
+  using (public.is_agency() or exists (
+    select 1 from public.events e where e.id = guests.event_id and e.owner_id = auth.uid()
+  ))
+  with check (public.is_agency() or exists (
+    select 1 from public.events e where e.id = guests.event_id and e.owner_id = auth.uid()
+  ));
+
+create policy "rsvp_admin_all" on public.rsvp
+  for all to authenticated
+  using (public.is_agency() or exists (
+    select 1 from public.events e where e.id = rsvp.event_id and e.owner_id = auth.uid()
+  ))
+  with check (public.is_agency() or exists (
+    select 1 from public.events e where e.id = rsvp.event_id and e.owner_id = auth.uid()
+  ));
 
 -- ----------------------------------------------------------------------------
 -- 3. Stockage (photos : hero + galerie ; musique d'ambiance)
@@ -155,14 +226,40 @@ drop policy if exists "wedding_admin_delete" on storage.objects;
 create policy "wedding_public_read" on storage.objects
   for select using (bucket_id = 'wedding');
 
+-- Écriture réservée à l'agence ou au couple propriétaire de l'événement dont
+-- l'id est le premier segment du chemin (ex. "<event_id>/hero-....jpg").
 create policy "wedding_admin_insert" on storage.objects
-  for insert to authenticated with check (bucket_id = 'wedding');
+  for insert to authenticated with check (
+    bucket_id = 'wedding' and (
+      public.is_agency() or exists (
+        select 1 from public.events e
+        where e.owner_id = auth.uid()
+          and e.id::text = (storage.foldername(name))[1]
+      )
+    )
+  );
 
 create policy "wedding_admin_update" on storage.objects
-  for update to authenticated using (bucket_id = 'wedding');
+  for update to authenticated using (
+    bucket_id = 'wedding' and (
+      public.is_agency() or exists (
+        select 1 from public.events e
+        where e.owner_id = auth.uid()
+          and e.id::text = (storage.foldername(name))[1]
+      )
+    )
+  );
 
 create policy "wedding_admin_delete" on storage.objects
-  for delete to authenticated using (bucket_id = 'wedding');
+  for delete to authenticated using (
+    bucket_id = 'wedding' and (
+      public.is_agency() or exists (
+        select 1 from public.events e
+        where e.owner_id = auth.uid()
+          and e.id::text = (storage.foldername(name))[1]
+      )
+    )
+  );
 
 -- ----------------------------------------------------------------------------
 -- 4. Données initiales — événement « myrna-jael »

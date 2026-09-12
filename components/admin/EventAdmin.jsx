@@ -35,12 +35,12 @@ export default function EventAdmin({ slug }) {
   const supabase = getSupabaseBrowserClient();
   return (
     <AdminAuthGate supabase={supabase}>
-      <EventAdminContent supabase={supabase} slug={slug} />
+      {(session) => <EventAdminContent supabase={supabase} slug={slug} session={session} />}
     </AdminAuthGate>
   );
 }
 
-function EventAdminContent({ supabase, slug }) {
+function EventAdminContent({ supabase, slug, session }) {
   const [event, setEvent] = useState(undefined); // undefined = chargement, null = introuvable
   const [tab, setTab] = useState("infos");
 
@@ -64,6 +64,10 @@ function EventAdminContent({ supabase, slug }) {
 
   if (event === undefined) return <FullPageLoader />;
   if (event === null) return <EventNotFound />;
+
+  const isAgency = session.user.app_metadata?.role === "agency";
+  const isOwner = event.owner_id === session.user.id;
+  if (!isAgency && !isOwner) return <AccessDenied />;
 
   const initials = `${(event.bride_name || "M")[0]} & ${(event.groom_name || "J")[0]}`;
 
@@ -207,6 +211,24 @@ function EventNotFound() {
           className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-rust px-5 py-2.5 text-xs font-medium uppercase tracking-[0.15em] text-cream transition-colors hover:bg-rust-deep"
         >
           ← Tous les événements
+        </Link>
+      </Card>
+    </div>
+  );
+}
+
+function AccessDenied() {
+  return (
+    <div className="flex min-h-svh items-center justify-center bg-linen px-5">
+      <Card title="Accès non autorisé" className="max-w-md text-center">
+        <p className="mb-6 text-sm font-light text-cocoa/60">
+          Cet événement n’est pas géré par votre compte.
+        </p>
+        <Link
+          href="/admin"
+          className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-rust px-5 py-2.5 text-xs font-medium uppercase tracking-[0.15em] text-cream transition-colors hover:bg-rust-deep"
+        >
+          ← Mon espace
         </Link>
       </Card>
     </div>
