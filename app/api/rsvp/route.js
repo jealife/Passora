@@ -68,7 +68,7 @@ export async function POST(request) {
 
     if (guestsError) throw guestsError;
 
-    const guest = matchGuest(name, guests || []);
+    let guest = matchGuest(name, guests || []);
     if (guest === "ambiguous") {
       return NextResponse.json(
         {
@@ -80,14 +80,16 @@ export async function POST(request) {
       );
     }
     if (!guest) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error:
-            "Nous ne retrouvons pas ce nom sur la liste des invités. Vérifiez l'orthographe (telle qu'elle figure sur votre invitation) ou contactez les mariés.",
-        },
-        { status: 404 },
-      );
+      // Pas de liste d'invités pré-enregistrée pour cet événement (ou nom absent) :
+      // on enregistre l'invité à la volée plutôt que de bloquer la confirmation.
+      const { data: newGuest, error: insertGuestError } = await supabase
+        .from("guests")
+        .insert({ event_id: event.id, full_name: name })
+        .select("id, full_name")
+        .single();
+
+      if (insertGuestError) throw insertGuestError;
+      guest = newGuest;
     }
 
     const { error: upsertError } = await supabase.from("rsvp").upsert(
