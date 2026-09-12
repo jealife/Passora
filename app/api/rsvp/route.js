@@ -80,8 +80,20 @@ export async function POST(request) {
       );
     }
     if (!guest) {
-      // Pas de liste d'invités pré-enregistrée pour cet événement (ou nom absent) :
-      // on enregistre l'invité à la volée plutôt que de bloquer la confirmation.
+      if ((guests || []).length > 0) {
+        // Une liste d'invités a été configurée pour cet événement : on la respecte.
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "Nous ne retrouvons pas ce nom sur la liste des invités. Vérifiez l'orthographe (telle qu'elle figure sur votre invitation) ou contactez les mariés.",
+          },
+          { status: 404 },
+        );
+      }
+
+      // Aucune liste d'invités configurée pour cet événement : on enregistre
+      // l'invité à la volée plutôt que de bloquer la confirmation.
       const { data: newGuest, error: insertGuestError } = await supabase
         .from("guests")
         .insert({ event_id: event.id, full_name: name })

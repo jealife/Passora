@@ -1,10 +1,10 @@
-import AdminApp from "@/components/admin/AdminApp";
+import EventsList from "@/components/admin/EventsList";
 
 export const metadata = {
-  title: "Administration — Myrna & Jaël",
+  title: "Administration — Passora",
   robots: { index: false, follow: false },
 };
 
 export default function AdminPage() {
-  return <AdminApp />;
+  return <EventsList />;
 }

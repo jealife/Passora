@@ -39,16 +39,19 @@ export default function WelcomeBanner({ supabase, event, onNavigate }) {
   const hour = now ? now.getHours() : 12;
   const greeting = hour < 5 || hour >= 18 ? "Bonsoir" : "Bonjour";
 
-  const daysLeft = now
-    ? Math.ceil((new Date(event.wedding_date).getTime() - now.getTime()) / 86400000)
-    : NaN;
-  const dayLabel = Number.isNaN(daysLeft)
-    ? "J-…"
-    : daysLeft > 0
-      ? `J-${daysLeft}`
-      : daysLeft === 0
-        ? "Jour J"
-        : "Mariés !";
+  const daysLeft =
+    now && event.wedding_date
+      ? Math.ceil((new Date(event.wedding_date).getTime() - now.getTime()) / 86400000)
+      : NaN;
+  const dayLabel = !event.wedding_date
+    ? "Date ?"
+    : Number.isNaN(daysLeft)
+      ? "J-…"
+      : daysLeft > 0
+        ? `J-${daysLeft}`
+        : daysLeft === 0
+          ? "Jour J"
+          : "Mariés !";
 
   const quickStats = [
     { key: "invites", icon: "users", value: stats?.guests, label: "invités" },
@@ -101,8 +104,10 @@ export default function WelcomeBanner({ supabase, event, onNavigate }) {
               className="mt-1.5 text-[0.78rem] font-light leading-relaxed text-cream/75 sm:mt-2 sm:text-sm sm:text-cream/80"
             >
               Votre grand jour se prépare ici : {" "}
-              <span className="capitalize">{formatDateFr(event.wedding_date)}</span>
-              {!event.date_confirmed && (
+              <span className="capitalize">
+                {event.wedding_date ? formatDateFr(event.wedding_date) : "date à définir"}
+              </span>
+              {event.wedding_date && !event.date_confirmed && (
                 <em className="font-serif italic"> (à confirmer)</em>
               )}.
             </motion.p>
@@ -127,10 +132,10 @@ export default function WelcomeBanner({ supabase, event, onNavigate }) {
             <span className="mt-0.5 flex flex-col items-center gap-0.5 text-center text-[0.5rem] font-medium uppercase tracking-[0.15em] text-cream/65 sm:mt-1 sm:flex-row sm:gap-1 sm:text-[0.6rem] sm:tracking-[0.2em]">
               <Icon name="heart" className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
               <span className="sm:hidden">
-                {daysLeft > 0 ? "restants" : "🎉"}
+                {!event.wedding_date ? "" : daysLeft > 0 ? "restants" : "🎉"}
               </span>
               <span className="hidden sm:inline">
-                {daysLeft > 0 ? "avant le oui" : "félicitations"}
+                {!event.wedding_date ? "" : daysLeft > 0 ? "avant le oui" : "félicitations"}
               </span>
             </span>
           </motion.div>

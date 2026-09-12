@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import Icon from "@/components/ui/Icons";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { classNames } from "@/lib/utils";
 import { EASE } from "@/components/motion/primitives";
-import { AdminButton, Card, Field, Input, Notice } from "@/components/admin/ui";
+import { AdminButton, Card } from "@/components/admin/ui";
 import WelcomeBanner from "@/components/admin/WelcomeBanner";
 import EventForm from "@/components/admin/EventForm";
 import ProgramManager from "@/components/admin/ProgramManager";
@@ -14,6 +15,7 @@ import VenuesManager from "@/components/admin/VenuesManager";
 import GalleryManager from "@/components/admin/GalleryManager";
 import GuestsManager from "@/components/admin/GuestsManager";
 import RsvpList from "@/components/admin/RsvpList";
+import AdminAuthGate, { FullPageLoader } from "@/components/admin/AuthGate";
 
 const TABS = [
   { key: "infos", label: "Informations", shortLabel: "Infos", icon: "pencil" },
@@ -25,14 +27,21 @@ const TABS = [
 ];
 
 /**
- * L'espace des mariés — administration personnalisée de l'événement.
+ * L'espace des mariés — administration d'UN événement (`/admin/[slug]`).
  * Accès protégé par Supabase Auth (comptes créés dans le tableau de bord
  * Supabase) ; toutes les écritures sont en outre verrouillées par RLS.
  */
-export default function AdminApp() {
+export default function EventAdmin({ slug }) {
   const supabase = getSupabaseBrowserClient();
-  const [session, setSession] = useState(undefined); // undefined = chargement
-  const [event, setEvent] = useState(null);
+  return (
+    <AdminAuthGate supabase={supabase}>
+      <EventAdminContent supabase={supabase} slug={slug} />
+    </AdminAuthGate>
+  );
+}
+
+function EventAdminContent({ supabase, slug }) {
+  const [event, setEvent] = useState(undefined); // undefined = chargement, null = introuvable
   const [tab, setTab] = useState("infos");
 
   // ── Service Worker ────────────────────────────────────────────────────────
@@ -44,34 +53,19 @@ export default function AdminApp() {
     }
   }, []);
 
-  // ── Auth ──────────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!supabase) return;
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_e, nextSession) => setSession(nextSession));
-    return () => subscription.unsubscribe();
-  }, [supabase]);
-
-  useEffect(() => {
-    if (!supabase || !session) return;
     supabase
       .from("events")
       .select("*")
-      .order("created_at", { ascending: true })
-      .limit(1)
+      .eq("slug", slug)
       .maybeSingle()
-      .then(({ data }) => setEvent(data));
-  }, [supabase, session]);
+      .then(({ data }) => setEvent(data ?? null));
+  }, [supabase, slug]);
 
-  if (!supabase) return <SetupNotice />;
-  if (session === undefined) return <FullPageLoader />;
-  if (!session) return <LoginForm supabase={supabase} />;
+  if (event === undefined) return <FullPageLoader />;
+  if (event === null) return <EventNotFound />;
 
-  const initials = event
-    ? `${(event.bride_name || "M")[0]} & ${(event.groom_name || "J")[0]}`
-    : "M & J";
+  const initials = `${(event.bride_name || "M")[0]} & ${(event.groom_name || "J")[0]}`;
 
   return (
     <div className="min-h-svh bg-linen">
@@ -84,16 +78,19 @@ export default function AdminApp() {
             </span>
             <div className="min-w-0">
               <p className="truncate font-serif text-base italic text-cocoa sm:text-lg">
-                {event ? `L’espace de ${initials}` : "Administration"}
+                L’espace de {initials}
               </p>
-              <p className="hidden text-[0.6rem] font-medium uppercase tracking-[0.25em] text-cocoa/45 sm:block">
-                Notre mariage, à notre image
-              </p>
+              <Link
+                href="/admin"
+                className="hidden text-[0.6rem] font-medium uppercase tracking-[0.25em] text-cocoa/45 hover:text-cocoa/70 sm:block"
+              >
+                ← Tous les événements
+              </Link>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <a
-              href="/"
+              href={`/e/${event.slug}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex h-9 w-9 items-center justify-center rounded-full text-cocoa/60 transition-colors hover:bg-cocoa/5 hover:text-cocoa sm:h-auto sm:w-auto sm:flex-row sm:gap-2 sm:px-4 sm:py-2 sm:text-xs sm:font-medium sm:uppercase sm:tracking-[0.15em]"
@@ -173,34 +170,45 @@ export default function AdminApp() {
 
       <InstallBanner />
       <main className="mx-auto max-w-6xl px-4 py-6 pb-28 sm:px-5 sm:py-8">
-        {!event ? (
-          <Card title="Création de votre événement...">
-          </Card>
-        ) : (
-          <>
-            <WelcomeBanner supabase={supabase} event={event} onNavigate={setTab} />
+        <WelcomeBanner supabase={supabase} event={event} onNavigate={setTab} />
 
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={tab}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3, ease: EASE }}
-              >
-                {tab === "infos" && (
-                  <EventForm supabase={supabase} event={event} onSaved={setEvent} />
-                )}
-                {tab === "programme" && <ProgramManager supabase={supabase} eventId={event.id} />}
-                {tab === "lieux" && <VenuesManager supabase={supabase} eventId={event.id} />}
-                {tab === "galerie" && <GalleryManager supabase={supabase} eventId={event.id} />}
-                {tab === "invites" && <GuestsManager supabase={supabase} eventId={event.id} />}
-                {tab === "rsvp" && <RsvpList supabase={supabase} eventId={event.id} />}
-              </motion.div>
-            </AnimatePresence>
-          </>
-        )}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={tab}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3, ease: EASE }}
+          >
+            {tab === "infos" && (
+              <EventForm supabase={supabase} event={event} onSaved={setEvent} />
+            )}
+            {tab === "programme" && <ProgramManager supabase={supabase} eventId={event.id} />}
+            {tab === "lieux" && <VenuesManager supabase={supabase} eventId={event.id} />}
+            {tab === "galerie" && <GalleryManager supabase={supabase} eventId={event.id} />}
+            {tab === "invites" && <GuestsManager supabase={supabase} eventId={event.id} />}
+            {tab === "rsvp" && <RsvpList supabase={supabase} eventId={event.id} />}
+          </motion.div>
+        </AnimatePresence>
       </main>
+    </div>
+  );
+}
+
+function EventNotFound() {
+  return (
+    <div className="flex min-h-svh items-center justify-center bg-linen px-5">
+      <Card title="Événement introuvable" className="max-w-md text-center">
+        <p className="mb-6 text-sm font-light text-cocoa/60">
+          Ce lien ne correspond à aucun événement.
+        </p>
+        <Link
+          href="/admin"
+          className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-rust px-5 py-2.5 text-xs font-medium uppercase tracking-[0.15em] text-cream transition-colors hover:bg-rust-deep"
+        >
+          ← Tous les événements
+        </Link>
+      </Card>
     </div>
   );
 }
@@ -217,6 +225,9 @@ function InstallBanner() {
     if (localStorage.getItem("pwa-banner-dismissed")) return;
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
+    // Détection ponctuelle de plateforme au montage — pas une souscription à
+    // une source externe changeante, donc pas de meilleur pattern applicable ici.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (isIOS && !isStandalone) setVisible(true);
   }, []);
 
@@ -245,10 +256,10 @@ function InstallBanner() {
           M&amp;J
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium text-cocoa">Ajouter à l'écran d'accueil</p>
+          <p className="text-xs font-medium text-cocoa">Ajouter à l’écran d’accueil</p>
           <p className="mt-0.5 text-[0.65rem] leading-relaxed text-cocoa/60">
             Appuyez sur <span aria-label="Partager">⎋</span> puis{" "}
-            <strong className="font-medium">Sur l'écran d'accueil</strong>{" "}
+            <strong className="font-medium">Sur l’écran d’accueil</strong>{" "}
             <span aria-label="Plus">➕</span>
           </p>
         </div>
@@ -262,122 +273,5 @@ function InstallBanner() {
         </button>
       </motion.div>
     </AnimatePresence>
-  );
-}
-
-function FullPageLoader() {
-  return (
-    <div className="flex min-h-svh items-center justify-center bg-linen">
-      <Icon name="loader" className="h-8 w-8 animate-spin-slow text-terracotta" />
-    </div>
-  );
-}
-
-function SetupNotice() {
-  return (
-    <div className="flex min-h-svh items-center justify-center bg-linen px-5">
-      <Card title="Supabase n'est pas configuré" className="max-w-lg">
-        <ol className="list-decimal space-y-2 pl-5 text-sm font-light text-cocoa/75">
-          <li>Créez un projet sur supabase.com.</li>
-          <li>
-            Exécutez <code className="rounded bg-cocoa/8 px-1.5 py-0.5">supabase/schema.sql</code>{" "}
-            dans l’éditeur SQL.
-          </li>
-          <li>
-            Copiez <code className="rounded bg-cocoa/8 px-1.5 py-0.5">.env.local.example</code> vers{" "}
-            <code className="rounded bg-cocoa/8 px-1.5 py-0.5">.env.local</code> et renseignez vos
-            clés.
-          </li>
-          <li>Créez un utilisateur (Authentication &gt; Users) pour vous connecter ici.</li>
-        </ol>
-      </Card>
-    </div>
-  );
-}
-
-function LoginForm({ supabase }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setBusy(true);
-    setError("");
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
-    if (authError) setError("Identifiants incorrects. Merci de réessayer.");
-    setBusy(false);
-  };
-
-  return (
-    <div className="relative flex min-h-svh items-center justify-center overflow-hidden bg-linen px-5">
-      {/* Décor terracotta */}
-      <div
-        aria-hidden="true"
-        className="absolute -top-24 -left-24 h-80 w-80 rounded-full bg-blush/20 blur-3xl"
-      />
-      <div
-        aria-hidden="true"
-        className="absolute -right-28 -bottom-28 h-96 w-96 rounded-full bg-terracotta/15 blur-3xl"
-      />
-
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: EASE }}
-        className="relative w-full max-w-md"
-      >
-        <div className="mb-8 text-center">
-          {/* Monogramme dans une arche */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.9, ease: EASE, delay: 0.15 }}
-            className="mx-auto flex h-24 w-20 items-end justify-center rounded-t-full border border-terracotta/40 bg-champagne/50 pb-2"
-          >
-            <p className="font-serif text-3xl italic text-rust">M&amp;J</p>
-          </motion.div>
-          <p className="mt-4 font-serif text-2xl italic text-cocoa">Bienvenue chez vous</p>
-          <p className="mt-1.5 text-[0.68rem] font-medium uppercase tracking-[0.3em] text-cocoa/50">
-            L’espace des mariés
-          </p>
-        </div>
-        <Card>
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <Field label="Adresse e-mail">
-              <Input
-                type="email"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </Field>
-            <Field label="Mot de passe">
-              <Input
-                type="password"
-                required
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </Field>
-            {error && <Notice tone="error">{error}</Notice>}
-            <button
-              type="submit"
-              disabled={busy}
-              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-rust px-5 py-3 text-xs font-medium uppercase tracking-[0.2em] text-cream transition-colors hover:bg-rust-deep disabled:opacity-50"
-            >
-              {busy && <Icon name="loader" className="h-4 w-4 animate-spin-slow" />}
-              Ouvrir notre espace
-            </button>
-          </form>
-        </Card>
-        <p className="mt-6 text-center font-serif text-sm italic text-cocoa/50">
-          « Deux cœurs, une seule organisation. »
-        </p>
-      </motion.div>
-    </div>
   );
 }
