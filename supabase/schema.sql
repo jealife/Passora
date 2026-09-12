@@ -28,6 +28,12 @@ create table if not exists public.events (
   -- Compte (Supabase Auth) du couple propriétaire de cet événement.
   -- Nul tant qu'aucun compte ne lui a été assigné (accès agence uniquement).
   owner_id             uuid references auth.users(id) on delete set null,
+  -- Thème de couleurs (accent principal / secondaire / fond) ; nul = palette
+  -- par défaut inchangée. Le reste de la palette est dérivé côté application
+  -- (voir lib/theme.js) pour ne pas exposer 14 couleurs à configurer.
+  theme_primary        text,
+  theme_secondary      text,
+  theme_background     text,
   created_at           timestamptz not null default now(),
   updated_at           timestamptz not null default now()
 );

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { AdminButton, Card, Field, Input, Notice, TextArea } from "@/components/admin/ui";
+import { THEME_PRESETS } from "@/lib/theme";
+import { classNames } from "@/lib/utils";
 
 /** timestamptz -> valeur pour <input type="datetime-local"> (heure locale). */
 function toDatetimeLocal(value) {
@@ -11,6 +13,14 @@ function toDatetimeLocal(value) {
   const pad = (n) => String(n).padStart(2, "0");
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
+
+// Couleurs par défaut de app/globals.css — utilisées comme valeur affichée
+// par les sélecteurs quand l'événement n'a pas encore de thème personnalisé.
+const DEFAULT_THEME = {
+  theme_primary: "#b76950",
+  theme_secondary: "#8a8b62",
+  theme_background: "#faf6ef",
+};
 
 /** Informations générales de l'événement (textes, date, médias). */
 export default function EventForm({ supabase, event, onSaved }) {
@@ -26,6 +36,9 @@ export default function EventForm({ supabase, event, onSaved }) {
     story_text: event.story_text || "",
     story_audio_url: event.story_audio_url || "",
     footer_message: event.footer_message || "",
+    theme_primary: event.theme_primary || "",
+    theme_secondary: event.theme_secondary || "",
+    theme_background: event.theme_background || "",
   });
   const [status, setStatus] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -77,6 +90,9 @@ export default function EventForm({ supabase, event, onSaved }) {
     const payload = {
       ...form,
       wedding_date: form.wedding_date ? new Date(form.wedding_date).toISOString() : null,
+      theme_primary: form.theme_primary || null,
+      theme_secondary: form.theme_secondary || null,
+      theme_background: form.theme_background || null,
     };
     const { data, error } = await supabase
       .from("events")
@@ -201,6 +217,85 @@ export default function EventForm({ supabase, event, onSaved }) {
         </div>
       </Card>
 
+      <Card
+        title="Thème"
+        description="Couleurs de la page publique de cet événement. Le reste de la palette (dégradés, texte) s'ajuste automatiquement."
+        actions={
+          (form.theme_primary || form.theme_secondary || form.theme_background) && (
+            <button
+              type="button"
+              onClick={() =>
+                setForm((f) => ({
+                  ...f,
+                  theme_primary: "",
+                  theme_secondary: "",
+                  theme_background: "",
+                }))
+              }
+              className="cursor-pointer text-xs font-medium uppercase tracking-[0.15em] text-cocoa/50 underline-offset-4 hover:text-cocoa hover:underline"
+            >
+              Réinitialiser
+            </button>
+          )
+        }
+      >
+        <div className="mb-5 flex flex-wrap gap-3">
+          {THEME_PRESETS.map((preset) => {
+            const isActive =
+              (form.theme_primary || DEFAULT_THEME.theme_primary) === preset.primary &&
+              (form.theme_secondary || DEFAULT_THEME.theme_secondary) === preset.secondary &&
+              (form.theme_background || DEFAULT_THEME.theme_background) === preset.background;
+            return (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() =>
+                  setForm((f) => ({
+                    ...f,
+                    theme_primary: preset.primary,
+                    theme_secondary: preset.secondary,
+                    theme_background: preset.background,
+                  }))
+                }
+                className={classNames(
+                  "flex cursor-pointer items-center gap-2.5 rounded-full border px-3 py-2 pr-4 transition-colors",
+                  isActive ? "border-cocoa/40 bg-cocoa/5" : "border-cocoa/12 hover:border-cocoa/25",
+                )}
+              >
+                <span
+                  className="h-6 w-6 shrink-0 rounded-full border border-cocoa/15"
+                  style={{
+                    background: `conic-gradient(${preset.primary} 0deg 120deg, ${preset.secondary} 120deg 240deg, ${preset.background} 240deg 360deg)`,
+                  }}
+                />
+                <span className="text-xs font-medium text-cocoa/80">{preset.name}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-3">
+          <ColorField
+            label="Accent principal"
+            value={form.theme_primary}
+            fallback={DEFAULT_THEME.theme_primary}
+            onChange={set("theme_primary")}
+          />
+          <ColorField
+            label="Accent secondaire"
+            value={form.theme_secondary}
+            fallback={DEFAULT_THEME.theme_secondary}
+            onChange={set("theme_secondary")}
+          />
+          <ColorField
+            label="Fond"
+            value={form.theme_background}
+            fallback={DEFAULT_THEME.theme_background}
+            onChange={set("theme_background")}
+          />
+        </div>
+      </Card>
+
       <Card title="Mot de la fin">
         <Field label="Message de fin (pied de page)">
           <TextArea rows={3} value={form.footer_message} onChange={set("footer_message")} />
@@ -218,5 +313,22 @@ export default function EventForm({ supabase, event, onSaved }) {
         </AdminButton>
       </div>
     </div>
+  );
+}
+
+/** Sélecteur de couleur natif + code hexadécimal, avec une couleur de secours tant que rien n'est choisi. */
+function ColorField({ label, value, fallback, onChange }) {
+  return (
+    <Field label={label}>
+      <div className="flex items-center gap-3">
+        <input
+          type="color"
+          value={value || fallback}
+          onChange={onChange}
+          className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-cocoa/15 bg-transparent p-0.5"
+        />
+        <span className="font-mono text-xs uppercase text-cocoa/60">{value || fallback}</span>
+      </div>
+    </Field>
   );
 }

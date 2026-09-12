@@ -10,6 +10,7 @@ import Program from "@/components/sections/Program";
 import Rsvp from "@/components/sections/Rsvp";
 import Story from "@/components/sections/Story";
 import Venues from "@/components/sections/Venues";
+import { buildEventTheme, themeToCss } from "@/lib/theme";
 
 /**
  * Page complète d'un événement — composée de sections réutilisables.
@@ -18,9 +19,11 @@ import Venues from "@/components/sections/Venues";
 export default function WeddingPage({ data }) {
   const { event, program, venues, gallery } = data;
   const initials = `${(event.bride_name || "M")[0]} & ${(event.groom_name || "J")[0]}`;
+  const theme = buildEventTheme(event);
 
   return (
     <WelcomeProvider>
+      {theme && <style dangerouslySetInnerHTML={{ __html: `:root{${themeToCss(theme)}}` }} />}
       <main className="flex-1 overflow-x-clip">
         <Navbar initials={initials} />
         <BackgroundMusic

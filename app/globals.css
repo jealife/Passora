@@ -19,6 +19,13 @@
   --color-cocoa: #3e2a21;
   --color-mist: #b9bdc1;
 
+  /* Marque Passora — utilisée uniquement dans l'admin (agence), jamais sur
+     les pages publiques d'événement (qui restent sur la palette ci-dessus,
+     ou le thème propre à l'événement — voir lib/theme.js). */
+  --color-passora-gold: #f2a61d;
+  --color-passora-gold-deep: #d9900f;
+  --color-passora-ink: #1b1108;
+
   --font-serif: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
   --font-sans: var(--font-jost), "Jost", "Helvetica Neue", Arial, sans-serif;
 
