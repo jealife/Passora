@@ -154,6 +154,12 @@ const PATHS = {
       <path d="M20.5 10a8.5 8.5 0 0 0-15.1-3.4L3 10M3.5 14a8.5 8.5 0 0 0 15.1 3.4L21 14" />
     </>
   ),
+  "dress-code": (
+    <>
+      <path d="M9 3h6l-1.2 2.8L12 8l-1.8-2.2L9 3Z" />
+      <path d="M9 3 4.5 6l1.8 3L8 7.8V21h8V7.8l1.7 1.2 1.8-3L15 3" />
+    </>
+  ),
 };
 
 export default function Icon({ name, className = "h-5 w-5", strokeWidth = 1.6, ...props }) {

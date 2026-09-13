@@ -7,6 +7,7 @@ import FadeIn from "@/components/ui/FadeIn";
 import Icon from "@/components/ui/Icons";
 import Ornament from "@/components/ui/Ornament";
 import { EASE, FloatingHearts } from "@/components/motion/primitives";
+import { formatDateFr } from "@/lib/utils";
 
 /**
  * Formulaire de confirmation de présence.
@@ -15,7 +16,8 @@ import { EASE, FloatingHearts } from "@/components/motion/primitives";
  * Des suggestions de noms apparaissent pendant la saisie (dès 2 caractères),
  * sans jamais exposer la liste complète des invités.
  */
-export default function Rsvp({ eventSlug }) {
+export default function Rsvp({ event }) {
+  const eventSlug = event.slug;
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState("idle"); // idle | submitting | success | error
@@ -140,6 +142,31 @@ export default function Rsvp({ eventSlug }) {
             Indiquez le nom figurant sur votre invitation, nous le retrouverons
             sur notre liste d’invités.
           </p>
+          {event.rsvp_deadline && (
+            <p className="mx-auto mt-3 max-w-md text-xs font-medium uppercase tracking-[0.15em] text-blush-soft">
+              Merci de confirmer avant le {formatDateFr(event.rsvp_deadline)}
+            </p>
+          )}
+          {(event.bride_contact_phone || event.groom_contact_phone) && (
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              {event.bride_contact_phone && (
+                <a
+                  href={`tel:${event.bride_contact_phone}`}
+                  className="rounded-full border border-cream/30 px-5 py-2 text-xs font-medium uppercase tracking-[0.15em] text-cream/85 transition-colors hover:bg-cream/10"
+                >
+                  Contacter {event.bride_name || "la mariée"}
+                </a>
+              )}
+              {event.groom_contact_phone && (
+                <a
+                  href={`tel:${event.groom_contact_phone}`}
+                  className="rounded-full border border-cream/30 px-5 py-2 text-xs font-medium uppercase tracking-[0.15em] text-cream/85 transition-colors hover:bg-cream/10"
+                >
+                  Contacter {event.groom_name || "le marié"}
+                </a>
+              )}
+            </div>
+          )}
         </FadeIn>
 
         <FadeIn delay={200} className="mt-12">
@@ -184,7 +211,7 @@ export default function Rsvp({ eventSlug }) {
                 transition={{ duration: 0.8, delay: 0.75 }}
                 className="mt-6 font-serif text-lg italic text-terracotta"
               >
-                Myrna &amp; Jaël
+                {event.bride_name} &amp; {event.groom_name}
               </motion.p>
             </motion.div>
           ) : (
@@ -266,7 +293,7 @@ export default function Rsvp({ eventSlug }) {
                   <textarea
                     id="rsvp-message"
                     rows={4}
-                    placeholder="Quelques mots doux pour Myrna & Jaël…"
+                    placeholder={`Quelques mots doux pour ${event.bride_name} & ${event.groom_name}…`}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     className="w-full resize-none rounded-2xl border border-cocoa/15 bg-white px-5 py-3.5 text-sm text-cocoa placeholder:font-light placeholder:text-cocoa/35 focus:border-terracotta focus:outline-2 focus:outline-terracotta/30 transition-colors"
