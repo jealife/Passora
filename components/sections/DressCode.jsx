@@ -1,11 +1,13 @@
 import FadeIn from "@/components/ui/FadeIn";
 import Icon from "@/components/ui/Icons";
+import FloralAccent from "@/components/ui/FloralAccent";
 
 /** Code vestimentaire : titre, précisions, petite icône (voir Icons.jsx). */
 export default function DressCode({ event }) {
   return (
-    <section className="bg-cream px-5 py-16 text-center sm:px-8 sm:py-20">
-      <FadeIn className="mx-auto max-w-md">
+    <section className="relative overflow-hidden bg-cream px-5 py-16 text-center sm:px-8 sm:py-20">
+      <FloralAccent className="absolute -top-6 -right-8 h-24 w-24 rotate-90 text-terracotta/40 sm:h-28 sm:w-28" />
+      <FadeIn className="relative mx-auto max-w-md">
         <p className="mb-3 text-[0.7rem] font-medium uppercase tracking-[0.3em] text-terracotta">
           Code vestimentaire
         </p>

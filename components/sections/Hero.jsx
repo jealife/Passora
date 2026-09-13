@@ -17,7 +17,7 @@ import { formatDateFr, formatTimeFr } from "@/lib/utils";
  * le décor glisse plus lentement que le contenu, qui s'élève et
  * s'estompe en quittant l'écran.
  */
-export default function Hero({ event, venueName }) {
+export default function Hero({ event, venueName, floralDecoration }) {
   const hasPhoto = Boolean(event.hero_image_url);
   const dateLabel = formatDateFr(event.wedding_date);
   const timeLabel = formatTimeFr(event.wedding_date);
@@ -94,6 +94,7 @@ export default function Hero({ event, venueName }) {
               animate={revealed ? { opacity: 1, scale: 1, x: "-50%", y: "-50%" } : undefined}
               transition={{ duration: 1.6, ease: EASE, delay: 0.35 }}
             />
+            {floralDecoration}
           </>
         )}
       </motion.div>

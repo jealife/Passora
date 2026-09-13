@@ -1,11 +1,13 @@
 import FadeIn from "@/components/ui/FadeIn";
 import Icon from "@/components/ui/Icons";
+import FloralAccent from "@/components/ui/FloralAccent";
 
 /** Suggestions de cadeaux : message, détails libres, QR code optionnel. */
 export default function Gifts({ event }) {
   return (
-    <section className="bg-linen px-5 py-16 text-center sm:px-8 sm:py-20">
-      <FadeIn className="mx-auto max-w-md">
+    <section className="relative overflow-hidden bg-linen px-5 py-16 text-center sm:px-8 sm:py-20">
+      <FloralAccent className="absolute -bottom-8 -left-6 h-24 w-24 -scale-x-100 rotate-180 text-terracotta/40 sm:h-28 sm:w-28" />
+      <FadeIn className="relative mx-auto max-w-md">
         <Icon name="gift" className="mx-auto mb-4 h-9 w-9 text-terracotta" />
         <p className="mb-3 text-[0.7rem] font-medium uppercase tracking-[0.3em] text-terracotta">
           Suggestion de cadeaux

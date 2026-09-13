@@ -1,3 +1,4 @@
+import Image from "next/image";
 import BackgroundMusic from "@/components/layout/BackgroundMusic";
 import Navbar from "@/components/layout/Navbar";
 import { WelcomeProvider } from "@/components/layout/WelcomeContext";
@@ -57,7 +58,20 @@ export default function TerracottaFloralLayout({ data }) {
           groomName={event.groom_name}
         />
         {showOpeningQuote && <OpeningQuote event={event} />}
-        <Hero event={event} venueName={venues[0]?.name || ""} />
+        <Hero
+          event={event}
+          venueName={venues[0]?.name || ""}
+          floralDecoration={
+            <Image
+              src="/images/themes/terracotta-floral/bouquet.png"
+              alt=""
+              width={393}
+              height={800}
+              aria-hidden="true"
+              className="pointer-events-none absolute -bottom-14 -right-10 h-auto w-40 opacity-90 sm:w-56 md:-right-6 md:w-64"
+            />
+          }
+        />
         {showParents && <Parents event={event} />}
         <Countdown targetDate={event.wedding_date} dateConfirmed={event.date_confirmed} />
         {showProgram && <Timeline program={program} />}

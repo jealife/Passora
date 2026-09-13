@@ -1,5 +1,6 @@
 import FadeIn from "@/components/ui/FadeIn";
 import Ornament from "@/components/ui/Ornament";
+import FloralAccent from "@/components/ui/FloralAccent";
 
 /**
  * Texte de bénédiction + noms des parents des mariés, affiché avant les
@@ -10,8 +11,9 @@ export default function Parents({ event }) {
   const groomParents = [event.groom_mother_name, event.groom_father_name].filter(Boolean);
 
   return (
-    <section className="bg-linen px-5 py-16 text-center sm:px-8 sm:py-20">
-      <FadeIn className="mx-auto max-w-2xl">
+    <section className="relative overflow-hidden bg-linen px-5 py-16 text-center sm:px-8 sm:py-20">
+      <FloralAccent className="absolute -bottom-6 -left-8 h-28 w-28 rotate-180 text-terracotta/50 sm:h-36 sm:w-36" />
+      <FadeIn className="relative mx-auto max-w-2xl">
         {event.parents_blessing_text && (
           <p className="mb-8 text-sm leading-relaxed font-light text-cocoa/75 sm:text-base">
             {event.parents_blessing_text}
