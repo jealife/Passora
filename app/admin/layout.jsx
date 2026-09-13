@@ -10,7 +10,7 @@ export const metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "M&J Admin",
+    title: "Passora Admin",
   },
   icons: {
     apple: "/icons/pwa-192.png",
