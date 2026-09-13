@@ -135,6 +135,45 @@ create trigger events_updated_at
   before update on public.events
   for each row execute function public.set_updated_at();
 
+-- Limite de fréquence (rate limiting) : voir migration 008 pour le détail.
+create table if not exists public.rate_limits (
+  rl_key       text primary key,
+  window_start timestamptz not null default now(),
+  count        integer not null default 1
+);
+
+alter table public.rate_limits enable row level security;
+
+create or replace function public.check_rate_limit(
+  p_key text,
+  p_max integer,
+  p_window_seconds integer
+)
+returns boolean
+language plpgsql
+as $$
+declare
+  v_count integer;
+begin
+  insert into public.rate_limits (rl_key, window_start, count)
+  values (p_key, now(), 1)
+  on conflict (rl_key) do update set
+    count = case
+      when public.rate_limits.window_start < now() - (p_window_seconds || ' seconds')::interval
+        then 1
+      else public.rate_limits.count + 1
+    end,
+    window_start = case
+      when public.rate_limits.window_start < now() - (p_window_seconds || ' seconds')::interval
+        then now()
+      else public.rate_limits.window_start
+    end
+  returning count into v_count;
+
+  return v_count > p_max;
+end;
+$$;
+
 -- Vrai pour un compte agence (super-admin) : accès total à tous les
 -- événements, porté par app_metadata (jamais user_metadata, modifiable
 -- par l'utilisateur) sur son compte Supabase Auth.
@@ -144,6 +183,26 @@ language sql stable
 as $$
   select coalesce((auth.jwt() -> 'app_metadata' ->> 'role') = 'agency', false);
 $$;
+
+-- Le couple propriétaire peut modifier son thème (couleurs) librement, mais
+-- pas changer de mise en page : ce choix reste réservé à l'agence. Voir
+-- migration 009.
+create or replace function public.enforce_layout_template_agency_only()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.layout_template is distinct from old.layout_template and not public.is_agency() then
+    raise exception 'Seule l''agence peut changer la mise en page.';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists events_layout_template_agency_only on public.events;
+create trigger events_layout_template_agency_only
+  before update on public.events
+  for each row execute function public.enforce_layout_template_agency_only();
 
 -- ----------------------------------------------------------------------------
 -- 2. Sécurité (Row Level Security)

@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getSupabaseServerClient, getSupabaseServiceClient } from "@/lib/supabase/server";
+import { isRateLimited } from "@/lib/rate-limit";
 
 /**
  * POST /api/admin/create-event — réservé à l'agence.
@@ -10,6 +11,13 @@ import { getSupabaseServerClient, getSupabaseServiceClient } from "@/lib/supabas
  * service role, qui ne doit jamais être exposée au navigateur.
  */
 export async function POST(request) {
+  if (await isRateLimited(request, "admin-create-event", 5, 60)) {
+    return NextResponse.json(
+      { ok: false, error: "Trop de tentatives. Merci de réessayer dans une minute." },
+      { status: 429 },
+    );
+  }
+
   const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
   if (!token) {
     return NextResponse.json({ ok: false, error: "Non authentifié." }, { status: 401 });
@@ -48,13 +56,9 @@ export async function POST(request) {
   try {
     // Réutilise un compte existant pour cet email (le même couple peut
     // posséder plusieurs événements) plutôt que d'échouer sur "déjà inscrit".
-    const { data: existingUsers, error: listError } = await serviceClient.auth.admin.listUsers({
-      page: 1,
-      perPage: 1000,
-    });
-    if (listError) throw listError;
-
-    let ownerId = existingUsers.users.find((u) => u.email?.toLowerCase() === ownerEmail)?.id;
+    // Pagine plutôt qu'un unique appel à 1000 comptes, qui manquerait
+    // silencieusement tout compte créé au-delà.
+    let ownerId = await findUserIdByEmail(serviceClient, ownerEmail);
     let tempPassword = null;
 
     if (!ownerId) {
@@ -101,5 +105,19 @@ export async function POST(request) {
       { ok: false, error: "Une erreur est survenue. Merci de réessayer." },
       { status: 500 },
     );
+  }
+}
+
+/** Recherche un compte Supabase Auth par email, page par page. */
+async function findUserIdByEmail(serviceClient, email) {
+  const perPage = 1000;
+  for (let page = 1; ; page += 1) {
+    const { data, error } = await serviceClient.auth.admin.listUsers({ page, perPage });
+    if (error) throw error;
+
+    const match = data.users.find((u) => u.email?.toLowerCase() === email);
+    if (match) return match.id;
+
+    if (data.users.length < perPage) return undefined;
   }
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSupabaseServiceClient } from "@/lib/supabase/server";
 import { DEFAULT_EVENT_SLUG } from "@/lib/content";
 import { normalizeName } from "@/lib/utils";
+import { isRateLimited } from "@/lib/rate-limit";
 
 /**
  * POST /api/rsvp — confirmation de présence.
@@ -12,6 +13,13 @@ import { normalizeName } from "@/lib/utils";
  * 2. Enregistre (ou met à jour) la réponse dans la table `rsvp`.
  */
 export async function POST(request) {
+  if (await isRateLimited(request, "rsvp", 10, 60)) {
+    return NextResponse.json(
+      { ok: false, error: "Trop de tentatives. Merci de réessayer dans une minute." },
+      { status: 429 },
+    );
+  }
+
   let body;
   try {
     body = await request.json();
