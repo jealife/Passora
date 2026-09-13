@@ -93,6 +93,7 @@ function EventAdminContent({ supabase, slug, session }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <CopyLinkButton slug={event.slug} />
             <a
               href={`/e/${event.slug}`}
               target="_blank"
@@ -295,5 +296,29 @@ function InstallBanner({ initials }) {
         </button>
       </motion.div>
     </AnimatePresence>
+  );
+}
+
+function CopyLinkButton({ slug }) {
+  const [copied, setCopied] = useState(false);
+
+  const copy = () => {
+    const url = `${window.location.origin}/e/${slug}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      className="flex h-9 items-center justify-center gap-1.5 rounded-full border border-cocoa/15 bg-cream/70 px-3 text-xs font-medium uppercase tracking-[0.12em] text-cocoa/80 transition-colors hover:bg-cocoa/10 active:scale-95 cursor-pointer"
+      title="Copier le lien d'invitation"
+    >
+      <Icon name={copied ? "check" : "send"} className="h-3.5 w-3.5 text-rust" />
+      <span className="hidden sm:inline">{copied ? "Copié !" : "Copier le lien"}</span>
+    </button>
   );
 }
