@@ -18,26 +18,31 @@ const jost = Jost({
 });
 
 /**
- * Métadonnées génériques de repli, utilisées par les routes qui ne
- * définissent pas les leurs (ex. /admin). Chaque page d'événement
- * (app/e/[slug]/page.jsx) fournit ses propres title/openGraph/twitter
- * pour que le lien partagé affiche le nom du bon couple, pas celui du
- * premier événement créé.
+ * Métadonnées génériques de la vitrine Passora (route racine) et de
+ * repli pour les routes qui ne définissent pas les leurs (ex. /admin).
+ * Chaque page d'événement (app/e/[slug]/page.jsx) fournit ses propres
+ * title/openGraph/twitter pour que le lien partagé affiche le nom du
+ * bon couple, pas celui du premier événement créé.
  */
+const TITLE = "Passora — Pages et invitations en ligne pour vos événements";
+const DESCRIPTION =
+  "Créez la page en ligne de votre événement — mariage aujourd'hui, bientôt bien d'autres — et personnalisez-la vous-même : programme, lieux, thème et confirmations de présence.";
+
 export const metadata = {
   metadataBase: new URL(getSiteUrl()),
-  title: "Passora — Invitations de mariage en ligne",
-  description: "Créez et partagez l'invitation en ligne de votre mariage avec Passora.",
+  title: TITLE,
+  description: DESCRIPTION,
   openGraph: {
-    title: "Passora — Invitations de mariage en ligne",
-    description: "Créez et partagez l'invitation en ligne de votre mariage avec Passora.",
+    title: TITLE,
+    description: DESCRIPTION,
     type: "website",
     locale: "fr_FR",
     siteName: "Passora",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Passora — Invitations de mariage en ligne",
+    title: TITLE,
+    description: DESCRIPTION,
   },
 };
 

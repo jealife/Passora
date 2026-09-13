@@ -1,19 +1,19 @@
 /**
- * Web App Manifest — Espace des mariés (PWA admin)
- * Servi automatiquement par Next.js à /manifest.webmanifest
+ * Web App Manifest — Espace client (PWA admin), commun à tous les
+ * événements. Servi automatiquement par Next.js à /manifest.webmanifest
  * et lié dans le <head> via le système Metadata.
  */
 export default function manifest() {
   return {
-    name: "L'espace des mariés — Myrna & Jaël",
-    short_name: "M&J Admin",
-    description: "Espace d'administration privé du mariage.",
+    name: "Passora — Espace client",
+    short_name: "Passora Admin",
+    description: "Espace d'administration privé de votre événement.",
     start_url: "/admin",
     scope: "/admin",
     display: "standalone",
     orientation: "portrait-primary",
-    background_color: "#f5efe6",
-    theme_color: "#b35b3c",
+    background_color: "#faf6ef",
+    theme_color: "#f2a61d",
     icons: [
       {
         src: "/icons/pwa-192.png",
