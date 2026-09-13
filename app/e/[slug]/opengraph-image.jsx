@@ -12,7 +12,7 @@ export async function generateImageMetadata({ params }) {
   return [
     {
       id: "og",
-      alt: `Invitation au mariage de ${brideGroom} — informations et confirmation de présence`,
+      alt: `Invitation au mariage de ${brideGroom} : informations et confirmation de présence`,
       size: OG_SIZE,
       contentType: "image/png",
     },
