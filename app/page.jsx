@@ -14,7 +14,7 @@ const NAV_LINKS = [
 
 const FEATURES = [
   {
-    icon: "sparkles",
+    icon: "refresh",
     title: "Mise en page & thème",
     text: "Plusieurs modèles disponibles, chacun personnalisable dans les couleurs de l'événement.",
   },
@@ -183,7 +183,7 @@ export default function HomePage() {
               <p className="text-[0.7rem] font-medium tracking-[0.3em] text-passora-gold-deep uppercase">
                 Fonctionnalités
               </p>
-              <h2 className="mt-3 font-serif text-3xl font-medium">Ce que fait déjà Passora</h2>
+              <h2 className="mt-3 font-serif text-3xl font-medium">Ce que fait Passora</h2>
             </FadeIn>
             <div className="mt-10 grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-passora-ink/10 bg-passora-ink/10 sm:grid-cols-2 lg:grid-cols-3">
               {FEATURES.map((feature, index) => (
@@ -210,7 +210,7 @@ export default function HomePage() {
                 Mises en page
               </p>
               <h2 className="mt-3 font-serif text-3xl font-medium">
-                Les modèles déjà disponibles
+                Les modèles disponibles
               </h2>
               <p className="mt-3 text-sm leading-relaxed text-passora-ink/60">
                 Dites-nous simplement lequel vous parle en nous contactant, ou demandez un modèle
@@ -241,6 +241,15 @@ export default function HomePage() {
                   <p className="mt-2 text-sm leading-relaxed text-passora-ink/60">
                     Arches et compositions terracotta : le modèle historique de Passora.
                   </p>
+                  <a
+                    href="/e/exemple-classique"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium tracking-wide text-passora-gold-deep hover:text-passora-ink"
+                  >
+                    Voir la page complète
+                    <Icon name="external-link" className="h-3.5 w-3.5" />
+                  </a>
                 </div>
               </FadeIn>
 
@@ -261,6 +270,15 @@ export default function HomePage() {
                     Citation d&apos;ouverture, parents des mariés, code vestimentaire, cadeaux et
                     motifs botaniques.
                   </p>
+                  <a
+                    href="/e/exemple-terracotta-floral"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium tracking-wide text-passora-gold-deep hover:text-passora-ink"
+                  >
+                    Voir la page complète
+                    <Icon name="external-link" className="h-3.5 w-3.5" />
+                  </a>
                 </div>
               </FadeIn>
 
@@ -270,7 +288,7 @@ export default function HomePage() {
               >
                 <div className="flex h-40 flex-col items-center justify-center gap-3 px-6 text-center">
                   <span className="flex h-9 w-9 items-center justify-center rounded-md bg-passora-gold text-passora-ink">
-                    <Icon name="sparkles" className="h-4.5 w-4.5" />
+                    <Icon name="pencil" className="h-4.5 w-4.5" />
                   </span>
                   <p className="text-xs text-passora-ink/60">
                     Un modèle conçu spécialement pour votre événement

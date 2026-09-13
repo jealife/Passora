@@ -6,7 +6,7 @@ export default function GuestNotes({ event }) {
   return (
     <section className="bg-cream px-5 py-16 text-center sm:px-8 sm:py-20">
       <FadeIn className="mx-auto max-w-md">
-        <Icon name="sparkles" className="mx-auto mb-4 h-8 w-8 text-terracotta" />
+        <Icon name="pencil" className="mx-auto mb-4 h-8 w-8 text-terracotta" />
         {event.guest_notes_title && (
           <h3 className="font-serif text-2xl italic text-cocoa">{event.guest_notes_title}</h3>
         )}

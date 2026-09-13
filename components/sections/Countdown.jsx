@@ -126,7 +126,7 @@ export default function Countdown({ targetDate, dateConfirmed = true }) {
         {!dateConfirmed && (
           <FadeIn delay={500} className="mt-10">
             <p className="inline-flex items-center gap-2 rounded-full border border-terracotta/20 bg-cream px-5 py-2.5 text-xs font-light tracking-wide text-cocoa/70">
-              <Icon name="sparkles" className="h-4 w-4 text-terracotta" />
+              <Icon name="clock" className="h-4 w-4 text-terracotta" />
               La date définitive vous sera confirmée très prochainement.
             </p>
           </FadeIn>
