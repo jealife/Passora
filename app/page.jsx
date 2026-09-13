@@ -71,7 +71,7 @@ export default function HomePage() {
             </p>
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <a
-                href="mailto:contact@jealife.com"
+                href="mailto:agency@jealife.com"
                 className="inline-flex items-center justify-center gap-2.5 rounded-full bg-passora-gold px-8 py-3.5 text-sm font-medium tracking-[0.1em] text-passora-ink uppercase transition-colors hover:bg-passora-gold-deep"
               >
                 <Icon name="mail" className="h-4 w-4" />
@@ -128,8 +128,8 @@ export default function HomePage() {
 
       <footer className="border-t border-passora-ink/8 px-5 py-8 text-center text-xs text-passora-ink/50 sm:px-8">
         <p>Passora — un produit JEaLiFe Agency</p>
-        <a href="mailto:contact@jealife.com" className="mt-1 inline-block hover:text-passora-gold-deep">
-          contact@jealife.com
+        <a href="mailto:agency@jealife.com" className="mt-1 inline-block hover:text-passora-gold-deep">
+          agency@jealife.com
         </a>
       </footer>
     </div>
