@@ -24,9 +24,9 @@ const jost = Jost({
  * title/openGraph/twitter pour que le lien partagé affiche le nom du
  * bon couple, pas celui du premier événement créé.
  */
-const TITLE = "Passora — Pages et invitations en ligne pour vos événements";
+const TITLE = "Passora, pages et invitations en ligne pour vos événements";
 const DESCRIPTION =
-  "Créez la page en ligne de votre événement — mariage aujourd'hui, bientôt bien d'autres — et personnalisez-la vous-même : programme, lieux, thème et confirmations de présence.";
+  "Créez la page en ligne de votre événement (mariage aujourd'hui, bientôt bien d'autres) et personnalisez-la vous-même : programme, lieux, thème et confirmations de présence.";
 
 export const metadata = {
   metadataBase: new URL(getSiteUrl()),

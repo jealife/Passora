@@ -38,7 +38,7 @@ export default function Venues({ venues = [] }) {
               <div className="relative mx-6 mb-6 overflow-hidden rounded-3xl sm:mx-8">
                 <iframe
                   src={venue.maps_embed_url}
-                  title={`Carte — ${venue.name}`}
+                  title={`Carte de ${venue.name}`}
                   loading="lazy"
                   allowFullScreen
                   referrerPolicy="no-referrer-when-downgrade"

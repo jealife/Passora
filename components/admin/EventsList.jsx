@@ -186,7 +186,7 @@ function CreateEventForm({ session, onCancel, onCreated }) {
         <div className="space-y-4">
           {created.existingAccount ? (
             <Notice tone="success">
-              Compte existant réutilisé pour cet email — le couple se connecte avec son mot de
+              Compte existant réutilisé pour cet email : le couple se connecte avec son mot de
               passe habituel.
             </Notice>
           ) : (

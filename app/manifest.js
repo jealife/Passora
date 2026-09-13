@@ -5,7 +5,7 @@
  */
 export default function manifest() {
   return {
-    name: "Passora — Espace client",
+    name: "Espace client Passora",
     short_name: "Passora Admin",
     description: "Espace d'administration privé de votre événement.",
     start_url: "/admin",

@@ -89,7 +89,7 @@ export default function EventForm({ supabase, event, onSaved, isAgency }) {
     } else {
       const { data } = supabase.storage.from("wedding").getPublicUrl(path);
       setForm((f) => ({ ...f, hero_image_url: data.publicUrl }));
-      setStatus({ tone: "success", text: "Photo téléversée — pensez à enregistrer." });
+      setStatus({ tone: "success", text: "Photo téléversée. Pensez à enregistrer." });
     }
     setUploading(false);
     e.target.value = "";
@@ -107,7 +107,7 @@ export default function EventForm({ supabase, event, onSaved, isAgency }) {
     } else {
       const { data } = supabase.storage.from("wedding").getPublicUrl(path);
       setForm((f) => ({ ...f, story_audio_url: data.publicUrl }));
-      setStatus({ tone: "success", text: "Musique téléversée — pensez à enregistrer." });
+      setStatus({ tone: "success", text: "Musique téléversée. Pensez à enregistrer." });
     }
     setUploadingMusic(false);
     e.target.value = "";
@@ -125,7 +125,7 @@ export default function EventForm({ supabase, event, onSaved, isAgency }) {
     } else {
       const { data } = supabase.storage.from("wedding").getPublicUrl(path);
       setForm((f) => ({ ...f, gift_qr_image_url: data.publicUrl }));
-      setStatus({ tone: "success", text: "QR code téléversé — pensez à enregistrer." });
+      setStatus({ tone: "success", text: "QR code téléversé. Pensez à enregistrer." });
     }
     setUploadingQr(false);
     e.target.value = "";
@@ -151,7 +151,7 @@ export default function EventForm({ supabase, event, onSaved, isAgency }) {
     setStatus(
       error
         ? { tone: "error", text: `Erreur : ${error.message}` }
-        : { tone: "success", text: "Modifications enregistrées — elles sont en ligne." },
+        : { tone: "success", text: "Modifications enregistrées. Elles sont en ligne." },
     );
     if (data) onSaved(data);
     setBusy(false);
@@ -208,7 +208,7 @@ export default function EventForm({ supabase, event, onSaved, isAgency }) {
             />
           ) : (
             <div className="flex h-28 w-44 items-center justify-center rounded-2xl bg-champagne text-xs font-light text-cocoa/50">
-              Aucune photo — décor graphique affiché
+              Aucune photo : décor graphique affiché
             </div>
           )}
           <div className="space-y-3">
@@ -229,40 +229,41 @@ export default function EventForm({ supabase, event, onSaved, isAgency }) {
         </div>
       </Card>
 
+      <Card title="Notre histoire" description="Titre de la section « Notre histoire ».">
+        <Field label="Titre de la section">
+          <Input value={form.story_title} onChange={set("story_title")} />
+        </Field>
+      </Card>
+
       <Card
-        title="Notre histoire"
-        description="Titre de la section et musique d'ambiance lue en boucle à l'ouverture de la page."
+        title="Musique d'ambiance"
+        description="Lue en boucle à l'ouverture de la page, quelle que soit la mise en page choisie."
       >
-        <div className="space-y-5">
-          <Field label="Titre de la section">
-            <Input value={form.story_title} onChange={set("story_title")} />
-          </Field>
-          <Field
-            label="Musique d'ambiance"
-            hint="Fichier audio (MP3 recommandé). Sans musique téléversée, le morceau par défaut est joué."
-          >
-            <div className="space-y-3">
+        <Field
+          label="Musique"
+          hint="Fichier audio (MP3 recommandé). Sans musique téléversée, le morceau par défaut est joué."
+        >
+          <div className="space-y-3">
+            {form.story_audio_url && (
+              <audio controls src={form.story_audio_url} className="w-full max-w-md" />
+            )}
+            <div className="flex flex-wrap items-center gap-3">
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-cocoa/5 px-5 py-2.5 text-xs font-medium uppercase tracking-[0.15em] text-cocoa transition-colors hover:bg-cocoa/10">
+                <input type="file" accept="audio/*" onChange={uploadMusic} className="hidden" />
+                {uploadingMusic ? "Téléversement…" : "Téléverser une musique"}
+              </label>
               {form.story_audio_url && (
-                <audio controls src={form.story_audio_url} className="w-full max-w-md" />
+                <AdminButton
+                  variant="danger"
+                  icon="trash"
+                  onClick={() => setForm((f) => ({ ...f, story_audio_url: "" }))}
+                >
+                  Retirer la musique
+                </AdminButton>
               )}
-              <div className="flex flex-wrap items-center gap-3">
-                <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-cocoa/5 px-5 py-2.5 text-xs font-medium uppercase tracking-[0.15em] text-cocoa transition-colors hover:bg-cocoa/10">
-                  <input type="file" accept="audio/*" onChange={uploadMusic} className="hidden" />
-                  {uploadingMusic ? "Téléversement…" : "Téléverser une musique"}
-                </label>
-                {form.story_audio_url && (
-                  <AdminButton
-                    variant="danger"
-                    icon="trash"
-                    onClick={() => setForm((f) => ({ ...f, story_audio_url: "" }))}
-                  >
-                    Retirer la musique
-                  </AdminButton>
-                )}
-              </div>
             </div>
-          </Field>
-        </div>
+          </div>
+        </Field>
       </Card>
 
       <Card
@@ -421,7 +422,7 @@ export default function EventForm({ supabase, event, onSaved, isAgency }) {
 
       <Card
         title="Contacts & délai RSVP"
-        description="Affichés uniquement s'ils sont renseignés — aucun interrupteur nécessaire."
+        description="Affichés uniquement s'ils sont renseignés, aucun interrupteur nécessaire."
       >
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label="Contact de la mariée" hint="Numéro affiché pour les questions RSVP.">

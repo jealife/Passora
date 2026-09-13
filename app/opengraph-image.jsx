@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { OG_SIZE } from "@/lib/og-image";
 
-export const alt = "Passora — pages et invitations en ligne pour vos événements";
+export const alt = "Passora, pages et invitations en ligne pour vos événements";
 export const size = OG_SIZE;
 export const contentType = "image/png";
 

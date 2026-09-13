@@ -1,7 +1,7 @@
 import EventAdmin from "@/components/admin/EventAdmin";
 
 export const metadata = {
-  title: "Administration — Passora",
+  title: "Administration Passora",
   robots: { index: false, follow: false },
 };
 

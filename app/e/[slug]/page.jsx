@@ -11,8 +11,8 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const { event } = await getEventData(slug);
-  const title = `${event.bride_name} & ${event.groom_name} — ${event.name}`;
-  const description = `${event.tagline} — retrouvez le programme, les lieux et confirmez votre présence.`;
+  const title = `${event.bride_name} & ${event.groom_name} · ${event.name}`;
+  const description = `${event.tagline}. Retrouvez le programme, les lieux et confirmez votre présence.`;
 
   // openGraph/twitter sont explicitement redéfinis ici (pas seulement title) :
   // Next.js ne fusionne pas ces objets champ par champ avec le layout racine,

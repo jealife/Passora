@@ -166,7 +166,7 @@ export default function ProgramManager({ supabase, eventId }) {
         ))}
         {rows.length === 0 && (
           <p className="py-8 text-center text-sm font-light text-cocoa/50">
-            Aucun moment — ajoutez-en un pour commencer.
+            Aucun moment. Ajoutez-en un pour commencer.
           </p>
         )}
       </div>
