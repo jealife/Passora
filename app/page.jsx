@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { PassoraLogo } from "@/components/admin/AuthGate";
+import EventTypesSlider from "@/components/EventTypesSlider";
 import FadeIn from "@/components/ui/FadeIn";
 import Icon from "@/components/ui/Icons";
 import FloralAccent from "@/components/ui/FloralAccent";
@@ -170,29 +171,11 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-              <p className="mt-3 text-center text-[0.7rem] text-passora-ink/40">
-                Aperçu illustratif, chaque événement a sa propre page.
-              </p>
             </FadeIn>
           </div>
         </section>
 
-        <section className="relative h-64 overflow-hidden border-b border-passora-ink/10 sm:h-80">
-          <Image
-            src="/images/showcase/rings.jpg"
-            alt=""
-            fill
-            sizes="100vw"
-            className="object-cover animate-ken-burns"
-          />
-          <div className="absolute inset-0 bg-passora-ink/55" />
-          <div className="absolute inset-0 bg-gradient-to-t from-passora-ink via-passora-ink/50 to-transparent" />
-          <FadeIn className="relative flex h-full items-center justify-center px-5 text-center">
-            <p className="max-w-md font-serif text-2xl font-medium text-cream italic sm:text-3xl">
-              Chaque événement mérite une page à la hauteur de son histoire.
-            </p>
-          </FadeIn>
-        </section>
+        <EventTypesSlider />
 
         <section id="fonctionnalites" className="border-b border-passora-ink/10 px-5 py-20 sm:px-8">
           <div className="mx-auto max-w-6xl">
