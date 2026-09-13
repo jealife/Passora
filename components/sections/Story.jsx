@@ -27,8 +27,7 @@ export default function Story({ event }) {
             <Ornament className="text-terracotta" />
           </div>
           <blockquote className="mt-10 font-serif text-2xl leading-relaxed italic text-cocoa/85 sm:text-3xl">
-            «&nbsp;Une personne peut tomber, deux peuvent se relever, mais trois liés par Dieu
-            deviennent difficiles à briser.&nbsp;»
+            «&nbsp;{event.story_text}&nbsp;»
           </blockquote>
         </FadeIn>
       </div>

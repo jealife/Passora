@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Icon from "@/components/ui/Icons";
 import { classNames } from "@/lib/utils";
 
-const LINKS = [
+const DEFAULT_LINKS = [
   { href: "#histoire", label: "Notre histoire" },
   { href: "#galerie", label: "Galerie" },
   { href: "#programme", label: "Programme" },
@@ -14,8 +14,10 @@ const LINKS = [
 /**
  * Barre de navigation fixe : transparente sur le hero,
  * fond crème translucide dès que l'on défile.
+ * `links` : sections à afficher (une section masquée ne doit pas avoir de
+ * lien mort) — par défaut, toutes les sections.
  */
-export default function Navbar({ initials = "M & J" }) {
+export default function Navbar({ initials = "M & J", links = DEFAULT_LINKS }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -45,7 +47,7 @@ export default function Navbar({ initials = "M & J" }) {
         </a>
 
         <div className="hidden items-center gap-8 lg:flex">
-          {LINKS.map((link) => (
+          {links.map((link) => (
             <a
               key={link.href}
               href={link.href}
@@ -81,7 +83,7 @@ export default function Navbar({ initials = "M & J" }) {
         )}
       >
         <div className="flex flex-col gap-1 px-6 py-4">
-          {LINKS.map((link) => (
+          {links.map((link) => (
             <a
               key={link.href}
               href={link.href}

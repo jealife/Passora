@@ -14,16 +14,18 @@ export default function Footer({ event }) {
           <Icon name="gift" className="h-6 w-6" />
         </span>
 
-        <p className="mt-8 font-serif text-2xl leading-relaxed font-light text-cream italic sm:text-[1.7rem]">
-          « {event.footer_message} »
-        </p>
+        {event.footer_message && (
+          <p className="mt-8 font-serif text-2xl leading-relaxed font-light text-cream italic sm:text-[1.7rem]">
+            « {event.footer_message} »
+          </p>
+        )}
 
         <div className="mt-9">
           <Ornament className="text-terracotta" />
         </div>
 
         <p className="mt-9 font-serif text-3xl italic text-cream">{initials}</p>
-        <p className="mt-2 text-[0.72rem] font-light uppercase tracking-[0.3em] text-cream/50">
+        <div className="mt-2 text-[0.72rem] font-light uppercase tracking-[0.3em] text-cream/50">
           {event.bride_name} &amp; {event.groom_name}
           <span className="mx-2.5" aria-hidden="true">
             ·
@@ -33,7 +35,7 @@ export default function Footer({ event }) {
           <div className="mt-2 text-[0.72rem] font-light uppercase tracking-[0.3em] text-cream/50 py-4">
             <span className="italic mt-20">Made by Passora·event</span>
           </div>
-        </p>
+        </div>
       </FadeIn>
     </footer>
   );

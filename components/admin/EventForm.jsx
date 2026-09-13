@@ -23,7 +23,7 @@ const DEFAULT_THEME = {
 };
 
 /** Informations générales de l'événement (textes, date, médias). */
-export default function EventForm({ supabase, event, onSaved }) {
+export default function EventForm({ supabase, event, onSaved, isAgency }) {
   const [form, setForm] = useState({
     name: event.name || "",
     bride_name: event.bride_name || "",
@@ -39,6 +39,10 @@ export default function EventForm({ supabase, event, onSaved }) {
     theme_primary: event.theme_primary || "",
     theme_secondary: event.theme_secondary || "",
     theme_background: event.theme_background || "",
+    show_story: event.show_story ?? true,
+    show_gallery: event.show_gallery ?? true,
+    show_program: event.show_program ?? true,
+    show_venues: event.show_venues ?? true,
   });
   const [status, setStatus] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -218,6 +222,34 @@ export default function EventForm({ supabase, event, onSaved }) {
       </Card>
 
       <Card
+        title="Sections affichées sur le site"
+        description="Une section vide ne s'affiche jamais ; désactivez-la ici pour la masquer même si elle contient déjà quelque chose."
+      >
+        <div className="grid gap-3 sm:grid-cols-2">
+          {[
+            { key: "show_story", label: "Notre histoire" },
+            { key: "show_gallery", label: "Galerie" },
+            { key: "show_program", label: "Programme" },
+            { key: "show_venues", label: "Lieux" },
+          ].map(({ key, label }) => (
+            <label
+              key={key}
+              className="flex cursor-pointer items-center gap-3 rounded-xl border border-cocoa/12 bg-cream/50 px-4 py-3"
+            >
+              <input
+                type="checkbox"
+                checked={form[key]}
+                onChange={set(key)}
+                className="h-4 w-4 accent-rust"
+              />
+              <span className="text-sm text-cocoa/80">{label}</span>
+            </label>
+          ))}
+        </div>
+      </Card>
+
+      {isAgency && (
+      <Card
         title="Thème"
         description="Couleurs de la page publique de cet événement. Le reste de la palette (dégradés, texte) s'ajuste automatiquement."
         actions={
@@ -295,6 +327,7 @@ export default function EventForm({ supabase, event, onSaved }) {
           />
         </div>
       </Card>
+      )}
 
       <Card title="Mot de la fin">
         <Field label="Message de fin (pied de page)">

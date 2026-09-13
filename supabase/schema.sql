@@ -34,6 +34,12 @@ create table if not exists public.events (
   theme_primary        text,
   theme_secondary      text,
   theme_background     text,
+  -- Visibilité volontaire des sections optionnelles (une section vide ne
+  -- s'affiche de toute façon jamais, voir lib/data.js / WeddingPage.jsx).
+  show_story           boolean not null default true,
+  show_gallery         boolean not null default true,
+  show_program         boolean not null default true,
+  show_venues          boolean not null default true,
   created_at           timestamptz not null default now(),
   updated_at           timestamptz not null default now()
 );

@@ -185,7 +185,7 @@ function EventAdminContent({ supabase, slug, session }) {
             transition={{ duration: 0.3, ease: EASE }}
           >
             {tab === "infos" && (
-              <EventForm supabase={supabase} event={event} onSaved={setEvent} />
+              <EventForm supabase={supabase} event={event} onSaved={setEvent} isAgency={isAgency} />
             )}
             {tab === "programme" && <ProgramManager supabase={supabase} eventId={event.id} />}
             {tab === "lieux" && <VenuesManager supabase={supabase} eventId={event.id} />}
