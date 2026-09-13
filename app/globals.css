@@ -36,6 +36,7 @@
   --animate-pulse-soft: pulse-soft 2.4s ease-in-out infinite;
   --animate-spin-slow: spin 1.2s linear infinite;
   --animate-equalizer: equalizer 0.9s ease-in-out infinite;
+  --animate-ken-burns: ken-burns 16s ease-in-out infinite alternate;
 
   @keyframes fade-up {
     from {
@@ -92,6 +93,14 @@
     }
     50% {
       transform: scaleY(1);
+    }
+  }
+  @keyframes ken-burns {
+    from {
+      transform: scale(1);
+    }
+    to {
+      transform: scale(1.09);
     }
   }
 }

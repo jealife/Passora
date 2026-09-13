@@ -1,7 +1,9 @@
+import Image from "next/image";
 import Link from "next/link";
 import { PassoraLogo } from "@/components/admin/AuthGate";
 import FadeIn from "@/components/ui/FadeIn";
 import Icon from "@/components/ui/Icons";
+import FloralAccent from "@/components/ui/FloralAccent";
 
 const NAV_LINKS = [
   { href: "#fonctionnalites", label: "Fonctionnalités" },
@@ -42,19 +44,6 @@ const FEATURES = [
   },
 ];
 
-const LAYOUTS = [
-  {
-    name: "Classique",
-    swatches: ["#b76950", "#a63d32", "#3e2a21"],
-    text: "Arches et compositions terracotta : le modèle historique de Passora.",
-  },
-  {
-    name: "Terracotta floral",
-    swatches: ["#b76950", "#8a8b62", "#faf6ef"],
-    text: "Citation d'ouverture, parents des mariés, code vestimentaire, cadeaux et motifs botaniques.",
-  },
-];
-
 const STEPS = [
   {
     number: "01",
@@ -72,6 +61,12 @@ const STEPS = [
     text: "Un lien unique à envoyer à vos invités, confirmations de présence incluses.",
   },
 ];
+
+// Numéro WhatsApp de l'agence (+241 02 32 03 95, au format international
+// sans le 0 de tronc initial).
+const CONTACT_HREF = `https://wa.me/2412320395?text=${encodeURIComponent(
+  "Bonjour, je souhaite en savoir plus sur Passora.",
+)}`;
 
 /**
  * Vitrine publique de Passora (route racine du site). Générique — ne
@@ -120,10 +115,12 @@ export default function HomePage() {
               </p>
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
                 <a
-                  href="mailto:agency@jealife.com"
-                  className="inline-flex items-center justify-center gap-2.5 rounded-md bg-passora-ink px-7 py-3.5 text-sm font-medium tracking-[0.06em] text-cream transition-colors hover:bg-passora-ink/85"
+                  href={CONTACT_HREF}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2.5 rounded-md bg-passora-gold px-7 py-3.5 text-sm font-medium tracking-[0.06em] text-passora-ink uppercase transition-colors hover:bg-passora-gold-deep"
                 >
-                  <Icon name="mail" className="h-4 w-4" />
+                  <Icon name="send" className="h-4 w-4" />
                   Nous contacter
                 </a>
                 <Link
@@ -135,7 +132,11 @@ export default function HomePage() {
               </div>
             </FadeIn>
 
-            <FadeIn delay={150}>
+            <FadeIn delay={150} className="relative">
+              <div
+                aria-hidden="true"
+                className="absolute -inset-6 -z-10 rounded-full bg-passora-gold/20 blur-3xl animate-pulse-soft"
+              />
               <div className="overflow-hidden rounded-lg border border-passora-ink/15 bg-white shadow-[0_1px_0_rgba(27,17,8,0.04)]">
                 <div className="flex items-center gap-1.5 border-b border-passora-ink/10 bg-linen/60 px-4 py-3">
                   <span className="h-2 w-2 rounded-full bg-passora-ink/15" />
@@ -145,17 +146,28 @@ export default function HomePage() {
                     passora.jealife.com/e/awa-ibrahima
                   </span>
                 </div>
-                <div className="bg-gradient-to-b from-champagne via-cream to-linen px-8 py-16 text-center">
-                  <p className="text-[0.6rem] font-medium tracking-[0.35em] text-terracotta uppercase">
-                    Nous nous disons oui
-                  </p>
-                  <p className="mt-4 font-serif text-3xl font-medium text-cocoa italic">
-                    Awa &amp; Ibrahima
-                  </p>
-                  <p className="mt-3 text-xs text-cocoa/55">Samedi 12 septembre 2026 · Yaoundé</p>
-                  <span className="mt-7 inline-block rounded-md bg-rust px-5 py-2.5 text-[0.65rem] font-medium tracking-[0.15em] text-cream uppercase">
-                    Confirmer ma présence
-                  </span>
+                <div className="relative h-80 overflow-hidden sm:h-96">
+                  <Image
+                    src="/images/showcase/rings.jpg"
+                    alt=""
+                    fill
+                    priority
+                    sizes="(min-width: 1024px) 40vw, 90vw"
+                    className="object-cover animate-ken-burns"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-b from-cocoa/50 via-cocoa/35 to-cocoa/85" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-end px-8 pb-9 text-center">
+                    <p className="text-[0.6rem] font-medium tracking-[0.35em] text-blush-soft uppercase">
+                      Nous nous disons oui
+                    </p>
+                    <p className="mt-3 font-serif text-3xl font-medium text-cream italic">
+                      Awa &amp; Ibrahima
+                    </p>
+                    <p className="mt-3 text-xs text-cream/70">Samedi 12 septembre 2026 · Yaoundé</p>
+                    <span className="mt-6 inline-block rounded-md bg-rust px-5 py-2.5 text-[0.65rem] font-medium tracking-[0.15em] text-cream uppercase">
+                      Confirmer ma présence
+                    </span>
+                  </div>
                 </div>
               </div>
               <p className="mt-3 text-center text-[0.7rem] text-passora-ink/40">
@@ -163,6 +175,23 @@ export default function HomePage() {
               </p>
             </FadeIn>
           </div>
+        </section>
+
+        <section className="relative h-64 overflow-hidden border-b border-passora-ink/10 sm:h-80">
+          <Image
+            src="/images/showcase/rings.jpg"
+            alt=""
+            fill
+            sizes="100vw"
+            className="object-cover animate-ken-burns"
+          />
+          <div className="absolute inset-0 bg-passora-ink/55" />
+          <div className="absolute inset-0 bg-gradient-to-t from-passora-ink via-passora-ink/50 to-transparent" />
+          <FadeIn className="relative flex h-full items-center justify-center px-5 text-center">
+            <p className="max-w-md font-serif text-2xl font-medium text-cream italic sm:text-3xl">
+              Chaque événement mérite une page à la hauteur de son histoire.
+            </p>
+          </FadeIn>
         </section>
 
         <section id="fonctionnalites" className="border-b border-passora-ink/10 px-5 py-20 sm:px-8">
@@ -175,8 +204,12 @@ export default function HomePage() {
             </FadeIn>
             <div className="mt-10 grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-passora-ink/10 bg-passora-ink/10 sm:grid-cols-2 lg:grid-cols-3">
               {FEATURES.map((feature, index) => (
-                <FadeIn key={feature.title} delay={index * 60} className="bg-cream p-7">
-                  <span className="mb-4 flex h-9 w-9 items-center justify-center rounded-md border border-passora-ink/15 text-passora-gold-deep">
+                <FadeIn
+                  key={feature.title}
+                  delay={index * 60}
+                  className="bg-cream p-7 transition-colors hover:bg-white"
+                >
+                  <span className="mb-4 flex h-9 w-9 items-center justify-center rounded-md bg-passora-gold text-passora-ink">
                     <Icon name={feature.icon} className="h-4.5 w-4.5" />
                   </span>
                   <h3 className="font-serif text-lg font-medium">{feature.title}</h3>
@@ -194,29 +227,79 @@ export default function HomePage() {
                 Mises en page
               </p>
               <h2 className="mt-3 font-serif text-3xl font-medium">
-                Deux modèles, un même souci du détail
+                Les modèles déjà disponibles
               </h2>
+              <p className="mt-3 text-sm leading-relaxed text-passora-ink/60">
+                Dites-nous simplement lequel vous parle en nous contactant, ou demandez un modèle
+                conçu spécialement pour votre événement.
+              </p>
             </FadeIn>
-            <div className="mt-10 grid gap-5 sm:grid-cols-2">
-              {LAYOUTS.map((layout, index) => (
-                <FadeIn
-                  key={layout.name}
-                  delay={index * 100}
-                  className="rounded-lg border border-passora-ink/12 bg-white p-7"
-                >
-                  <div className="flex gap-1.5">
-                    {layout.swatches.map((color) => (
-                      <span
-                        key={color}
-                        className="h-5 w-5 rounded-sm border border-passora-ink/10"
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
+
+            <div className="mt-10 grid gap-5 sm:grid-cols-3">
+              <FadeIn className="overflow-hidden rounded-lg border border-passora-ink/12 bg-white transition-all hover:-translate-y-1 hover:shadow-md hover:shadow-passora-ink/5">
+                <div className="relative flex h-40 items-center justify-center overflow-hidden bg-gradient-to-b from-champagne via-cream to-linen">
+                  <span
+                    aria-hidden="true"
+                    className="absolute h-28 w-28 rounded-t-full border border-terracotta/30"
+                  />
+                  <span
+                    aria-hidden="true"
+                    className="absolute h-24 w-24 rounded-t-full border border-terracotta/20"
+                  />
+                  <div className="relative text-center">
+                    <p className="text-[0.55rem] font-medium tracking-[0.3em] text-terracotta uppercase">
+                      Nous nous disons oui
+                    </p>
+                    <p className="mt-1 font-serif text-lg text-cocoa italic">A &amp; R</p>
                   </div>
-                  <h3 className="mt-5 font-serif text-xl font-medium">{layout.name}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-passora-ink/60">{layout.text}</p>
-                </FadeIn>
-              ))}
+                </div>
+                <div className="p-6">
+                  <h3 className="font-serif text-lg font-medium">Classique</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-passora-ink/60">
+                    Arches et compositions terracotta : le modèle historique de Passora.
+                  </p>
+                </div>
+              </FadeIn>
+
+              <FadeIn
+                delay={80}
+                className="overflow-hidden rounded-lg border border-passora-ink/12 bg-white transition-all hover:-translate-y-1 hover:shadow-md hover:shadow-passora-ink/5"
+              >
+                <div className="relative flex h-40 items-center justify-center overflow-hidden bg-cream px-6">
+                  <FloralAccent className="absolute -top-3 -left-4 h-16 w-16 -scale-x-100 text-terracotta/60" />
+                  <FloralAccent className="absolute -top-3 -right-4 h-16 w-16 rotate-90 text-terracotta/60" />
+                  <p className="relative text-center font-serif text-sm text-cocoa/80 italic">
+                    « L&apos;amour est patient, l&apos;amour est bon »
+                  </p>
+                </div>
+                <div className="p-6">
+                  <h3 className="font-serif text-lg font-medium">Terracotta floral</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-passora-ink/60">
+                    Citation d&apos;ouverture, parents des mariés, code vestimentaire, cadeaux et
+                    motifs botaniques.
+                  </p>
+                </div>
+              </FadeIn>
+
+              <FadeIn
+                delay={160}
+                className="overflow-hidden rounded-lg border border-dashed border-passora-ink/25 bg-linen/40 transition-all hover:-translate-y-1 hover:shadow-md hover:shadow-passora-ink/5"
+              >
+                <div className="flex h-40 flex-col items-center justify-center gap-3 px-6 text-center">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-md bg-passora-gold text-passora-ink">
+                    <Icon name="sparkles" className="h-4.5 w-4.5" />
+                  </span>
+                  <p className="text-xs text-passora-ink/60">
+                    Un modèle conçu spécialement pour votre événement
+                  </p>
+                </div>
+                <div className="p-6 pt-0">
+                  <h3 className="font-serif text-lg font-medium">Sur mesure</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-passora-ink/60">
+                    Décrivez-nous votre vision : nous le concevons et vous donnons vos accès.
+                  </p>
+                </div>
+              </FadeIn>
             </div>
           </div>
         </section>
@@ -231,7 +314,11 @@ export default function HomePage() {
             </FadeIn>
             <div className="mt-10 grid gap-8 sm:grid-cols-3 sm:gap-6">
               {STEPS.map((step, index) => (
-                <FadeIn key={step.number} delay={index * 100} className="border-t border-passora-ink/15 pt-5">
+                <FadeIn
+                  key={step.number}
+                  delay={index * 100}
+                  className="border-t-2 border-passora-gold pt-5"
+                >
                   <span className="font-serif text-2xl text-passora-ink/25">{step.number}</span>
                   <h3 className="mt-3 font-medium">{step.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-passora-ink/60">{step.text}</p>
@@ -250,10 +337,18 @@ export default function HomePage() {
               Décrivez-nous votre projet ; nous configurons votre espace et vous prenez le relais.
             </p>
             <a
-              href="mailto:agency@jealife.com"
+              href={CONTACT_HREF}
+              target="_blank"
+              rel="noopener noreferrer"
               className="mt-7 inline-flex items-center justify-center gap-2.5 rounded-md bg-passora-gold px-7 py-3.5 text-sm font-medium tracking-[0.06em] text-passora-ink uppercase transition-colors hover:bg-passora-gold-deep"
             >
-              <Icon name="mail" className="h-4 w-4" />
+              <Icon name="send" className="h-4 w-4" />
+              Nous contacter
+            </a>
+            <a
+              href="mailto:agency@jealife.com"
+              className="mt-4 block text-xs text-cream/50 transition-colors hover:text-passora-gold"
+            >
               agency@jealife.com
             </a>
           </FadeIn>
