@@ -76,7 +76,7 @@ const CONTACT_HREF = `https://wa.me/2412320395?text=${encodeURIComponent(
  */
 export default function HomePage() {
   return (
-    <div className="flex min-h-svh flex-col bg-cream text-passora-ink">
+    <div className="flex min-h-svh flex-col overflow-x-hidden bg-cream text-passora-ink">
       <header className="sticky top-0 z-20 border-b border-passora-ink/10 bg-cream/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
           <div className="flex items-center gap-2.5">
@@ -99,8 +99,8 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="flex-1">
-        <section className="border-b border-passora-ink/10 px-5 py-20 sm:px-8 sm:py-28">
+      <main className="flex-1 overflow-x-hidden">
+        <section className="relative overflow-hidden border-b border-passora-ink/10 px-5 py-20 sm:px-8 sm:py-28">
           <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
             <FadeIn>
               <p className="mb-5 text-[0.7rem] font-medium tracking-[0.35em] text-passora-gold-deep uppercase">

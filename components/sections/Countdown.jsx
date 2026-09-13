@@ -77,7 +77,7 @@ export default function Countdown({ targetDate, dateConfirmed = true }) {
   const isPast = remaining === null;
 
   return (
-    <section id="compteur" className="relative bg-linen py-24 sm:py-32">
+    <section id="compteur" className="relative overflow-hidden bg-linen py-24 sm:py-32">
       <div className="mx-auto max-w-4xl px-5 text-center sm:px-8">
         <FadeIn>
           <p className="mb-4 text-[0.7rem] font-medium uppercase tracking-[0.35em] text-terracotta">

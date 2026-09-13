@@ -42,7 +42,7 @@ export default function ClassicLayout({ data }) {
   return (
     <WelcomeProvider>
       {theme && <style dangerouslySetInnerHTML={{ __html: `:root{${themeToCss(theme)}}` }} />}
-      <main className="flex-1 overflow-x-clip">
+      <main className="flex-1 overflow-x-hidden">
         <Navbar initials={initials} links={navLinks} />
         <BackgroundMusic
           src={event.story_audio_url}

@@ -9,7 +9,7 @@ import SectionHeading from "@/components/ui/SectionHeading";
  */
 export default function Venues({ venues = [] }) {
   return (
-    <section id="lieux" className="bg-cream py-24 sm:py-32">
+    <section id="lieux" className="relative overflow-hidden bg-cream py-24 sm:py-32">
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
         <SectionHeading
           eyebrow="Où nous retrouver"

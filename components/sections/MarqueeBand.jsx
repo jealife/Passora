@@ -16,7 +16,7 @@ export default function MarqueeBand({ event }) {
   ];
 
   return (
-    <div className="relative -rotate-1 bg-champagne py-5 shadow-inner sm:py-6" aria-hidden="true">
+    <div className="relative overflow-hidden -rotate-1 bg-champagne py-5 shadow-inner sm:py-6" aria-hidden="true">
       <Marquee duration={30}>
         {pieces.map((piece) => (
           <span key={piece} className="flex items-center">
