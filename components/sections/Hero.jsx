@@ -94,9 +94,9 @@ export default function Hero({ event, venueName, floralDecoration }) {
               animate={revealed ? { opacity: 1, scale: 1, x: "-50%", y: "-50%" } : undefined}
               transition={{ duration: 1.6, ease: EASE, delay: 0.35 }}
             />
-            {floralDecoration}
           </>
         )}
+        {floralDecoration}
       </motion.div>
 
       {/* Contenu : cascade d'entrée orchestrée */}
