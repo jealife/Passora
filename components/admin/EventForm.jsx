@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { AdminButton, Card, Field, Input, Notice, TextArea } from "@/components/admin/ui";
 import { THEME_PRESETS } from "@/lib/theme";
 import { LAYOUT_TEMPLATES } from "@/lib/layouts";
@@ -201,9 +202,11 @@ export default function EventForm({ supabase, event, onSaved, isAgency }) {
       <Card title="Photo des mariés" description="Grande image du hero (recommandé : 2000 px de large).">
         <div className="flex flex-wrap items-center gap-5">
           {form.hero_image_url ? (
-            <img
+            <Image
               src={form.hero_image_url}
               alt="Aperçu de la photo des mariés"
+              width={176}
+              height={112}
               className="h-28 w-44 rounded-2xl object-cover shadow"
             />
           ) : (
@@ -229,10 +232,15 @@ export default function EventForm({ supabase, event, onSaved, isAgency }) {
         </div>
       </Card>
 
-      <Card title="Notre histoire" description="Titre de la section « Notre histoire ».">
-        <Field label="Titre de la section">
-          <Input value={form.story_title} onChange={set("story_title")} />
-        </Field>
+      <Card title="Notre histoire" description="Titre et texte de la section « Notre histoire ».">
+        <div className="space-y-5">
+          <Field label="Titre de la section">
+            <Input value={form.story_title} onChange={set("story_title")} />
+          </Field>
+          <Field label="Texte">
+            <TextArea rows={4} value={form.story_text} onChange={set("story_text")} />
+          </Field>
+        </div>
       </Card>
 
       <Card
@@ -374,9 +382,11 @@ export default function EventForm({ supabase, event, onSaved, isAgency }) {
           <Field label="QR code (optionnel)" hint="Image d'un QR code déjà généré (ex. par votre banque).">
             <div className="flex flex-wrap items-center gap-5">
               {form.gift_qr_image_url ? (
-                <img
+                <Image
                   src={form.gift_qr_image_url}
                   alt="Aperçu du QR code"
+                  width={112}
+                  height={112}
                   className="h-28 w-28 rounded-2xl border border-cocoa/12 object-contain bg-white p-2"
                 />
               ) : (
@@ -460,7 +470,6 @@ export default function EventForm({ supabase, event, onSaved, isAgency }) {
       </Card>
       )}
 
-      {isAgency && (
       <Card
         title="Thème"
         description="Couleurs de la page publique de cet événement. Le reste de la palette (dégradés, texte) s'ajuste automatiquement."
@@ -539,7 +548,6 @@ export default function EventForm({ supabase, event, onSaved, isAgency }) {
           />
         </div>
       </Card>
-      )}
 
       <Card title="Mot de la fin">
         <Field label="Message de fin (pied de page)">
