@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { AdminButton, Card, IconButton, Input, Notice } from "@/components/admin/ui";
 import { LoaderCard } from "@/components/admin/ProgramManager";
 
@@ -114,7 +115,15 @@ export default function GalleryManager({ supabase, eventId }) {
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {images.map((image, index) => (
             <figure key={image.id} className="group overflow-hidden rounded-2xl border border-cocoa/8 bg-cream/40">
-              <img src={image.url} alt={image.alt || ""} className="aspect-square w-full object-cover" />
+              <div className="relative aspect-square w-full">
+                <Image
+                  src={image.url}
+                  alt={image.alt || ""}
+                  fill
+                  sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+                  className="object-cover"
+                />
+              </div>
               <figcaption className="space-y-2 p-3">
                 <Input
                   aria-label="Légende"

@@ -168,6 +168,9 @@ export default function Gallery({ images = [] }) {
                   index % 2 ? "rotate-[1.2deg]" : "rotate-[-1.2deg]"
                 }`}
               >
+                {/* eslint-disable-next-line @next/next/no-img-element -- largeur intrinsèque
+                    volontaire (hauteur fixe, largeur libre selon le ratio de chaque photo) ;
+                    next/image imposerait une boîte de taille fixe et casserait la mise en page. */}
                 <img
                   src={image.url}
                   alt={image.alt || `Photo ${index + 1}`}
@@ -294,6 +297,8 @@ export default function Gallery({ images = [] }) {
                 className="flex max-h-[86svh] max-w-[92vw] cursor-grab flex-col items-center active:cursor-grabbing"
                 onClick={(e) => e.stopPropagation()}
               >
+                {/* eslint-disable-next-line @next/next/no-img-element -- même raison : taille
+                    intrinsèque dans la visionneuse plein écran. */}
                 <img
                   src={current.url}
                   alt={current.alt || `Photo ${lightbox.index + 1}`}
