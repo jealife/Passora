@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Icon from "@/components/ui/Icons";
 import { EASE } from "@/components/motion/primitives";
+import { classNames } from "@/lib/utils";
 import { Card, Field, Input, Notice } from "@/components/admin/ui";
 
 /**
@@ -37,9 +38,14 @@ export default function AdminAuthGate({ supabase, children }) {
 export function FullPageLoader() {
   return (
     <div className="flex min-h-svh items-center justify-center bg-linen">
-      <Icon name="loader" className="h-8 w-8 animate-spin-slow text-terracotta" />
+      <Icon name="loader" className="h-8 w-8 animate-spin-slow text-passora-gold-deep" />
     </div>
   );
+}
+
+export function PassoraLogo({ className = "h-20 w-20" }) {
+  // eslint-disable-next-line @next/next/no-img-element -- petit logo fixe, pas de bénéfice à next/image
+  return <img src="/logo-passora.png" alt="Passora" className={classNames("shadow-sm", className)} />;
 }
 
 function SetupNotice() {
@@ -81,14 +87,14 @@ function LoginForm({ supabase }) {
 
   return (
     <div className="relative flex min-h-svh items-center justify-center overflow-hidden bg-linen px-5">
-      {/* Décor terracotta */}
+      {/* Décor Passora */}
       <div
         aria-hidden="true"
-        className="absolute -top-24 -left-24 h-80 w-80 rounded-full bg-blush/20 blur-3xl"
+        className="absolute -top-24 -left-24 h-80 w-80 rounded-full bg-passora-gold/15 blur-3xl"
       />
       <div
         aria-hidden="true"
-        className="absolute -right-28 -bottom-28 h-96 w-96 rounded-full bg-terracotta/15 blur-3xl"
+        className="absolute -right-28 -bottom-28 h-96 w-96 rounded-full bg-passora-ink/10 blur-3xl"
       />
 
       <motion.div
@@ -98,14 +104,14 @@ function LoginForm({ supabase }) {
         className="relative w-full max-w-md"
       >
         <div className="mb-8 text-center">
-          {/* Monogramme dans une arche */}
           <motion.div
             initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.9, ease: EASE, delay: 0.15 }}
-            className="mx-auto flex h-24 w-20 items-end justify-center rounded-t-full border border-terracotta/40 bg-champagne/50 pb-2"
+            className="mx-auto"
+            style={{ width: "fit-content" }}
           >
-            <p className="font-serif text-3xl italic text-rust">M&amp;J</p>
+            <PassoraLogo />
           </motion.div>
           <p className="mt-4 font-serif text-2xl italic text-cocoa">Bienvenue chez vous</p>
           <p className="mt-1.5 text-[0.68rem] font-medium uppercase tracking-[0.3em] text-cocoa/50">
@@ -136,7 +142,7 @@ function LoginForm({ supabase }) {
             <button
               type="submit"
               disabled={busy}
-              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-rust px-5 py-3 text-xs font-medium uppercase tracking-[0.2em] text-cream transition-colors hover:bg-rust-deep disabled:opacity-50"
+              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-passora-gold px-5 py-3 text-xs font-medium uppercase tracking-[0.2em] text-passora-ink transition-colors hover:bg-passora-gold-deep disabled:opacity-50"
             >
               {busy && <Icon name="loader" className="h-4 w-4 animate-spin-slow" />}
               Ouvrir notre espace

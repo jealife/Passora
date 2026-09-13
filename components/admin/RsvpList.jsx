@@ -58,7 +58,7 @@ export default function RsvpList({ supabase, eventId }) {
             key={stat.label}
             className="rounded-2xl border border-cocoa/10 bg-white p-3 text-center shadow-sm sm:p-6 sm:rounded-3xl"
           >
-            <p className="font-serif text-2xl font-medium text-rust tabular-nums sm:text-4xl">{stat.value}</p>
+            <p className="font-serif text-2xl font-medium text-passora-gold-deep tabular-nums sm:text-4xl">{stat.value}</p>
             <p className="mt-1 text-[0.55rem] sm:text-[0.65rem] leading-none font-medium uppercase tracking-[0.08em] sm:tracking-[0.18em] text-cocoa/55">
               {stat.label}
             </p>

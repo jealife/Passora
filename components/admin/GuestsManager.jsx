@@ -133,7 +133,7 @@ export default function GuestsManager({ supabase, eventId }) {
       {status && <div className="mb-4"><Notice tone={status.tone}>{status.text}</Notice></div>}
 
       {showBulk && (
-        <div className="mb-6 space-y-3 rounded-2xl border border-terracotta/20 bg-champagne/40 p-5">
+        <div className="mb-6 space-y-3 rounded-2xl border border-passora-gold/30 bg-passora-gold/10 p-5">
           <p className="text-sm font-light text-cocoa/70">
             Collez votre liste, un nom complet par ligne. Les doublons sont ignorés.
           </p>

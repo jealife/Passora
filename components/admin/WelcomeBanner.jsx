@@ -64,12 +64,12 @@ export default function WelcomeBanner({ supabase, event, onNavigate }) {
       variants={staggerContainer(0.1, 0.05)}
       initial="hidden"
       animate="visible"
-      className="relative mb-8 overflow-hidden rounded-[2rem] bg-gradient-to-br from-rust via-terracotta to-rust-deep text-cream shadow-xl shadow-rust/20"
+      className="relative mb-8 overflow-hidden rounded-[2rem] bg-gradient-to-br from-passora-ink via-cocoa to-passora-gold-deep text-cream shadow-xl shadow-passora-ink/25"
     >
       {/* Décor : halo */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-20 -right-16 h-64 w-64 rounded-full bg-blush/25 blur-3xl"
+        className="pointer-events-none absolute -top-20 -right-16 h-64 w-64 rounded-full bg-passora-gold/20 blur-3xl"
       />
       {/* Décor : arches flottantes (desktop uniquement) */}
       <div
@@ -147,11 +147,11 @@ export default function WelcomeBanner({ supabase, event, onNavigate }) {
         {/* Fondu gauche/droite pour signaler le défilement */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-rust/50 to-transparent sm:hidden"
+          className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-passora-ink/60 to-transparent sm:hidden"
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-rust-deep/50 to-transparent sm:hidden"
+          className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-passora-gold-deep/60 to-transparent sm:hidden"
         />
         <div className="flex gap-2.5 overflow-x-auto px-6 pb-5 pt-0 [scrollbar-width:none] sm:flex-wrap sm:overflow-visible sm:px-9 sm:pb-7 [&::-webkit-scrollbar]:hidden">
           {quickStats.map((stat) => (

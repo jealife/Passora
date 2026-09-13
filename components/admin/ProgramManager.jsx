@@ -118,7 +118,7 @@ export default function ProgramManager({ supabase, eventId }) {
                 aria-label="Icône"
                 value={row.icon || "rings"}
                 onChange={(e) => update(index, "icon", e.target.value)}
-                className="cursor-pointer rounded-xl border border-cocoa/15 bg-cream/50 px-3 py-2.5 text-sm text-cocoa focus:border-terracotta focus:outline-2 focus:outline-terracotta/25 h-[40px] sm:h-auto"
+                className="cursor-pointer rounded-xl border border-cocoa/15 bg-cream/50 px-3 py-2.5 text-sm text-cocoa focus:border-passora-gold-deep focus:outline-2 focus:outline-passora-gold/25 h-[40px] sm:h-auto"
               >
                 {ICON_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -177,7 +177,7 @@ export default function ProgramManager({ supabase, eventId }) {
 export function LoaderCard() {
   return (
     <div className="flex items-center justify-center rounded-3xl border border-cocoa/10 bg-white py-20">
-      <Icon name="loader" className="h-6 w-6 animate-spin-slow text-terracotta" />
+      <Icon name="loader" className="h-6 w-6 animate-spin-slow text-passora-gold-deep" />
     </div>
   );
 }

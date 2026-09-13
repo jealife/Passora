@@ -76,8 +76,8 @@ function EventAdminContent({ supabase, slug, session }) {
       <header className="sticky top-0 z-30 border-b border-cocoa/10 bg-cream/90 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5">
           <div className="flex items-center gap-3.5">
-            {/* Monogramme dans une petite arche */}
-            <span className="flex h-11 w-9 items-end justify-center rounded-t-full border border-terracotta/40 bg-champagne/60 pb-1 font-serif text-sm italic text-rust">
+            {/* Monogramme du couple */}
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-passora-gold font-serif text-sm italic text-passora-ink">
               {initials.replace(/ /g, "")}
             </span>
             <div className="min-w-0">
@@ -124,13 +124,13 @@ function EventAdminContent({ supabase, slug, session }) {
               onClick={() => setTab(item.key)}
               className={classNames(
                 "relative flex shrink-0 cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-xs font-medium uppercase tracking-[0.15em] transition-colors",
-                tab === item.key ? "text-cream" : "text-cocoa/55 hover:bg-cocoa/5 hover:text-cocoa",
+                tab === item.key ? "text-passora-ink" : "text-cocoa/55 hover:bg-cocoa/5 hover:text-cocoa",
               )}
             >
               {tab === item.key && (
                 <motion.span
                   layoutId="admin-tab-pill"
-                  className="absolute inset-0 rounded-full bg-rust"
+                  className="absolute inset-0 rounded-full bg-passora-gold"
                   transition={{ type: "spring", stiffness: 380, damping: 32 }}
                 />
               )}
@@ -153,13 +153,13 @@ function EventAdminContent({ supabase, slug, session }) {
               onClick={() => setTab(item.key)}
               className={classNames(
                 "flex flex-1 flex-col items-center justify-center gap-1.5 py-1 text-center transition-colors relative h-full",
-                tab === item.key ? "text-rust" : "text-cocoa/50",
+                tab === item.key ? "text-passora-gold-deep" : "text-cocoa/50",
               )}
             >
               {tab === item.key && (
                 <motion.span
                   layoutId="admin-tab-pill-mobile"
-                  className="absolute top-0 h-0.5 w-10 rounded-full bg-rust"
+                  className="absolute top-0 h-0.5 w-10 rounded-full bg-passora-gold"
                   transition={{ type: "spring", stiffness: 380, damping: 32 }}
                 />
               )}
@@ -172,7 +172,7 @@ function EventAdminContent({ supabase, slug, session }) {
         </div>
       </nav>
 
-      <InstallBanner />
+      <InstallBanner initials={initials} />
       <main className="mx-auto max-w-6xl px-4 py-6 pb-28 sm:px-5 sm:py-8">
         <WelcomeBanner supabase={supabase} event={event} onNavigate={setTab} />
 
@@ -208,7 +208,7 @@ function EventNotFound() {
         </p>
         <Link
           href="/admin"
-          className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-rust px-5 py-2.5 text-xs font-medium uppercase tracking-[0.15em] text-cream transition-colors hover:bg-rust-deep"
+          className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-passora-gold px-5 py-2.5 text-xs font-medium uppercase tracking-[0.15em] text-passora-ink transition-colors hover:bg-passora-gold-deep"
         >
           ← Tous les événements
         </Link>
@@ -226,7 +226,7 @@ function AccessDenied() {
         </p>
         <Link
           href="/admin"
-          className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-rust px-5 py-2.5 text-xs font-medium uppercase tracking-[0.15em] text-cream transition-colors hover:bg-rust-deep"
+          className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-passora-gold px-5 py-2.5 text-xs font-medium uppercase tracking-[0.15em] text-passora-ink transition-colors hover:bg-passora-gold-deep"
         >
           ← Mon espace
         </Link>
@@ -240,7 +240,7 @@ function AccessDenied() {
  * quand l'app n'est pas encore ajoutée à l'écran d'accueil.
  * Dismissible ; la décision est mémorisée dans localStorage.
  */
-function InstallBanner() {
+function InstallBanner({ initials }) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -267,15 +267,15 @@ function InstallBanner() {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 12 }}
         transition={{ duration: 0.4, ease: EASE }}
-        className="fixed bottom-20 left-4 right-4 z-50 flex items-start gap-3 rounded-2xl border border-terracotta/20 bg-cream/95 px-4 py-3 shadow-lg backdrop-blur-md sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-xs"
+        className="fixed bottom-20 left-4 right-4 z-50 flex items-start gap-3 rounded-2xl border border-passora-gold/25 bg-cream/95 px-4 py-3 shadow-lg backdrop-blur-md sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-xs"
         role="status"
         aria-live="polite"
       >
         <span
-          className="flex h-10 w-8 shrink-0 items-end justify-center rounded-t-full border border-terracotta/40 bg-champagne/60 pb-1 font-serif text-xs italic text-rust"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-passora-gold font-serif text-xs italic text-passora-ink"
           aria-hidden="true"
         >
-          M&amp;J
+          {initials.replace(/ /g, "")}
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium text-cocoa">Ajouter à l’écran d’accueil</p>

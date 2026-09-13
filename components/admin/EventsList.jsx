@@ -8,7 +8,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { slugify, formatDateFr } from "@/lib/utils";
 import { EASE } from "@/components/motion/primitives";
 import { AdminButton, Card, Field, Input, Notice } from "@/components/admin/ui";
-import AdminAuthGate, { FullPageLoader } from "@/components/admin/AuthGate";
+import AdminAuthGate, { FullPageLoader, PassoraLogo } from "@/components/admin/AuthGate";
 
 /**
  * `/admin` — liste des événements gérés depuis ce projet Supabase.
@@ -52,11 +52,14 @@ function EventsListContent({ supabase, session }) {
     <div className="min-h-svh bg-linen">
       <header className="sticky top-0 z-30 border-b border-cocoa/10 bg-cream/90 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5">
-          <div className="min-w-0">
-            <p className="truncate font-serif text-lg italic text-cocoa">Passora</p>
-            <p className="hidden text-[0.6rem] font-medium uppercase tracking-[0.25em] text-cocoa/45 sm:block">
-              {isAgency ? "Tous les événements" : "Mon espace"}
-            </p>
+          <div className="flex min-w-0 items-center gap-2.5">
+            <PassoraLogo className="h-8 w-8" />
+            <div className="min-w-0">
+              <p className="truncate font-serif text-lg italic text-cocoa">Passora</p>
+              <p className="hidden text-[0.6rem] font-medium uppercase tracking-[0.25em] text-cocoa/45 sm:block">
+                {isAgency ? "Tous les événements" : "Mon espace"}
+              </p>
+            </div>
           </div>
           <AdminButton
             variant="subtle"
@@ -187,7 +190,7 @@ function CreateEventForm({ session, onCancel, onCreated }) {
               passe habituel.
             </Notice>
           ) : (
-            <div className="rounded-xl border border-terracotta/20 bg-champagne/40 p-4 text-sm text-cocoa">
+            <div className="rounded-xl border border-passora-gold/30 bg-passora-gold/10 p-4 text-sm text-cocoa">
               <p className="mb-1 font-medium">Mot de passe temporaire (affiché une seule fois) :</p>
               <p className="font-mono text-base">{created.tempPassword}</p>
             </div>

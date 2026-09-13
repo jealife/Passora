@@ -98,7 +98,7 @@ export default function GalleryManager({ supabase, eventId }) {
       title="Galerie"
       description="Les photos apparaissent sur le site dans l'ordre ci-dessous. Tant que la galerie est vide, des illustrations décoratives sont affichées."
       actions={
-        <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-rust px-5 py-2.5 text-xs font-medium uppercase tracking-[0.15em] text-cream transition-colors hover:bg-rust-deep">
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-passora-gold px-5 py-2.5 text-xs font-medium uppercase tracking-[0.15em] text-passora-ink transition-colors hover:bg-passora-gold-deep">
           <input type="file" accept="image/*" multiple onChange={upload} className="hidden" />
           {uploading ? "Téléversement…" : "Ajouter des photos"}
         </label>

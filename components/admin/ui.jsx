@@ -37,7 +37,7 @@ export function Field({ label, hint, children }) {
 }
 
 export const inputClass =
-  "w-full rounded-xl border border-cocoa/15 bg-cream/50 px-4 py-2.5 text-sm text-cocoa placeholder:text-cocoa/30 focus:border-terracotta focus:outline-2 focus:outline-terracotta/25 transition-colors";
+  "w-full rounded-xl border border-cocoa/15 bg-cream/50 px-4 py-2.5 text-sm text-cocoa placeholder:text-cocoa/30 focus:border-passora-gold-deep focus:outline-2 focus:outline-passora-gold/25 transition-colors";
 
 export function Input(props) {
   return <input {...props} className={classNames(inputClass, props.className)} />;
@@ -49,7 +49,7 @@ export function TextArea(props) {
 
 export function AdminButton({ icon, variant = "primary", busy = false, className = "", children, ...props }) {
   const styles = {
-    primary: "bg-rust text-cream hover:bg-rust-deep",
+    primary: "bg-passora-gold text-passora-ink hover:bg-passora-gold-deep",
     subtle: "bg-cocoa/5 text-cocoa hover:bg-cocoa/10",
     danger: "bg-transparent text-rust hover:bg-rust/10",
   };
