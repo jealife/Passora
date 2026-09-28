@@ -54,8 +54,8 @@ export default function WelcomeBanner({ supabase, event, onNavigate }) {
           : "Mariés !";
 
   const quickStats = [
-    { key: "invites", icon: "users", value: stats?.guests, label: "invités" },
-    { key: "rsvp", icon: "check", value: stats?.rsvp, label: "confirmés" },
+    { key: "liste", icon: "users", value: stats?.guests, label: "invités" },
+    { key: "reponses", icon: "check", value: stats?.rsvp, label: "confirmés" },
     { key: "galerie", icon: "camera", value: stats?.photos, label: "photos" },
   ];
 
@@ -64,7 +64,7 @@ export default function WelcomeBanner({ supabase, event, onNavigate }) {
       variants={staggerContainer(0.1, 0.05)}
       initial="hidden"
       animate="visible"
-      className="relative mb-8 overflow-hidden rounded-[2rem] bg-gradient-to-br from-passora-ink via-cocoa to-passora-gold-deep text-cream shadow-xl shadow-passora-ink/25"
+      className="relative mb-5 overflow-hidden rounded-[2rem] sm:mb-8 bg-gradient-to-br from-passora-ink via-cocoa to-passora-gold-deep text-cream shadow-xl shadow-passora-ink/25"
     >
       {/* Décor : halo */}
       <div
@@ -132,7 +132,7 @@ export default function WelcomeBanner({ supabase, event, onNavigate }) {
             <span className="mt-0.5 flex flex-col items-center gap-0.5 text-center text-[0.5rem] font-medium uppercase tracking-[0.15em] text-cream/65 sm:mt-1 sm:flex-row sm:gap-1 sm:text-[0.6rem] sm:tracking-[0.2em]">
               <Icon name="heart" className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
               <span className="sm:hidden">
-                {!event.wedding_date ? "" : daysLeft > 0 ? "restants" : "🎉"}
+                {event.wedding_date && daysLeft > 0 ? "restants" : ""}
               </span>
               <span className="hidden sm:inline">
                 {!event.wedding_date ? "" : daysLeft > 0 ? "avant le oui" : "félicitations"}

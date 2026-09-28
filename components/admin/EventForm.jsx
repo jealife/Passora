@@ -555,7 +555,7 @@ export default function EventForm({ supabase, event, onSaved, isAgency }) {
         </Field>
       </Card>
 
-      <div className="sticky bottom-[4.5rem] sm:bottom-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between sm:justify-end gap-3 rounded-2xl sm:rounded-full border border-cocoa/10 bg-cream/95 p-3 sm:px-4 sm:py-3 shadow-lg backdrop-blur-md z-20">
+      <div className="sticky bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between sm:justify-end gap-3 rounded-2xl sm:rounded-full border border-cocoa/10 bg-cream/95 p-3 sm:px-4 sm:py-3 shadow-lg backdrop-blur-md z-20">
         {status && (
           <div className="text-center sm:text-left flex-1 min-w-0">
             <Notice tone={status.tone}>{status.text}</Notice>
