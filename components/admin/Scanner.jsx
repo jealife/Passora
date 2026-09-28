@@ -24,6 +24,9 @@ function describeCameraError(err) {
   return `Impossible d'accéder à la caméra : ${text}`;
 }
 
+// La table appartient à l'invité (migration 011), lue via la liaison guest_id.
+const RSVP_FIELDS = "id, guest_name, checked_in_at, guests(table_label)";
+
 const formatTime = (value) =>
   new Date(value).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
 
@@ -59,7 +62,7 @@ export default function Scanner({ supabase, event }) {
 
     const { data } = await supabase
       .from("rsvp")
-      .select("*")
+      .select(RSVP_FIELDS)
       .eq("id", rsvpId.trim())
       .eq("event_id", event.id)
       .maybeSingle();
@@ -126,7 +129,7 @@ export default function Scanner({ supabase, event }) {
       .from("rsvp")
       .update({ checked_in_at: new Date().toISOString() })
       .eq("id", result.rsvp.id)
-      .select("*")
+      .select(RSVP_FIELDS)
       .single();
     if (updateError) setError(`Entrée non enregistrée : ${updateError.message}`);
     else setResult({ rsvp: data, justConfirmed: true });
@@ -219,9 +222,9 @@ export default function Scanner({ supabase, event }) {
 
           <div className="mt-6 w-full max-w-[15rem] rounded-2xl bg-passora-ink px-6 py-5 text-cream">
             <p className="text-[0.65rem] font-medium uppercase tracking-[0.28em] text-cream/55">Table</p>
-            {result.rsvp.table_label ? (
+            {result.rsvp.guests?.table_label ? (
               <p className="mt-1 font-serif text-6xl leading-none font-medium tabular-nums text-passora-gold">
-                {result.rsvp.table_label}
+                {result.rsvp.guests.table_label}
               </p>
             ) : (
               <p className="mt-2 text-sm font-light text-cream/75">Non attribuée</p>

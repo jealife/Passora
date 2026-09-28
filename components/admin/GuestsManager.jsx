@@ -3,17 +3,29 @@
 import { useEffect, useMemo, useState } from "react";
 import { AdminButton, Card, IconButton, Input, Notice, TextArea } from "@/components/admin/ui";
 import { LoaderCard } from "@/components/admin/ProgramManager";
+import TableInput from "@/components/admin/TableInput";
 import { normalizeName } from "@/lib/utils";
 
 /**
- * Liste des invités : ajout individuel, import en masse (un nom par ligne),
- * recherche et suppression. Seuls ces noms peuvent confirmer leur présence.
+ * "Jean Mba ; 5" ou "Jean Mba<tab>5" (copié depuis un tableur) →
+ * { full_name, table_label }. La table est facultative.
+ */
+function parseGuestLine(line) {
+  const [name, table = ""] = line.split(/[;\t]/).map((part) => part.trim());
+  return { full_name: name, table_label: table || null };
+}
+
+/**
+ * Liste des invités : ajout individuel avec sa table, import en masse (un
+ * nom par ligne, table facultative), recherche, table modifiable sur chaque
+ * ligne et suppression. Seuls ces noms peuvent confirmer leur présence.
  * Supprimer un invité supprime aussi sa confirmation de présence.
  */
 export default function GuestsManager({ supabase, eventId }) {
   const [guests, setGuests] = useState(null);
   const [confirmedIds, setConfirmedIds] = useState(new Set());
   const [newName, setNewName] = useState("");
+  const [newTable, setNewTable] = useState("");
   const [bulk, setBulk] = useState("");
   const [showBulk, setShowBulk] = useState(false);
   const [search, setSearch] = useState("");
@@ -49,39 +61,62 @@ export default function GuestsManager({ supabase, eventId }) {
     e.preventDefault();
     const name = newName.trim();
     if (!name) return;
+    const table = newTable.trim();
     setBusy(true);
-    const { error } = await supabase.from("guests").insert({ event_id: eventId, full_name: name });
-    setStatus(
-      error
-        ? { tone: "error", text: `Erreur : ${error.message}` }
-        : { tone: "success", text: `« ${name} » ajouté(e) à la liste.` },
-    );
-    setNewName("");
+    const { error } = await supabase
+      .from("guests")
+      .insert({ event_id: eventId, full_name: name, table_label: table || null });
+    if (error) {
+      setStatus({ tone: "error", text: `Erreur : ${error.message}` });
+    } else {
+      setStatus({
+        tone: "success",
+        text: table ? `« ${name} » ajouté(e), table ${table}.` : `« ${name} » ajouté(e) à la liste.`,
+      });
+      // La table est gardée : pratique pour enchaîner les invités d'une même table.
+      setNewName("");
+    }
     await reload();
     setBusy(false);
   };
 
   const importBulk = async () => {
-    const names = [...new Set(
-      bulk
-        .split("\n")
-        .map((line) => line.trim())
-        .filter((line) => line.length > 1),
-    )];
-    if (!names.length) return;
+    // Dédoublonnage sur le nom (sans accents ni casse), première ligne gardée.
+    const seen = new Set();
+    const rows = bulk
+      .split("\n")
+      .map(parseGuestLine)
+      .filter(({ full_name }) => {
+        const key = normalizeName(full_name);
+        if (key.length < 2 || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    if (!rows.length) return;
     setBusy(true);
     const { error } = await supabase
       .from("guests")
-      .insert(names.map((full_name) => ({ event_id: eventId, full_name })));
+      .insert(rows.map((row) => ({ event_id: eventId, ...row })));
     setStatus(
       error
         ? { tone: "error", text: `Erreur : ${error.message}` }
-        : { tone: "success", text: `${names.length} invité(s) importé(s).` },
+        : { tone: "success", text: `${rows.length} invité(s) importé(s).` },
     );
-    setBulk("");
-    setShowBulk(false);
+    if (!error) {
+      setBulk("");
+      setShowBulk(false);
+    }
     await reload();
     setBusy(false);
+  };
+
+  const saveTable = async (guest, value) => {
+    const { error } = await supabase
+      .from("guests")
+      .update({ table_label: value || null })
+      .eq("id", guest.id);
+    if (error) return error.message;
+    setGuests((list) => list.map((g) => (g.id === guest.id ? { ...g, table_label: value || null } : g)));
   };
 
   const remove = async (guest) => {
@@ -118,7 +153,7 @@ export default function GuestsManager({ supabase, eventId }) {
   return (
     <Card
       title={`Invités (${guests.length})`}
-      description="Le formulaire de confirmation n'accepte que les noms de cette liste."
+      description="Le formulaire de confirmation n'accepte que les noms de cette liste. La table choisie s'affiche au scan du billet, à l'entrée."
       actions={
         <AdminButton
           variant="subtle"
@@ -135,11 +170,13 @@ export default function GuestsManager({ supabase, eventId }) {
       {showBulk && (
         <div className="mb-6 space-y-3 rounded-2xl border border-passora-gold/30 bg-passora-gold/10 p-5">
           <p className="text-sm font-light text-cocoa/70">
-            Collez votre liste, un nom complet par ligne. Les doublons sont ignorés.
+            Collez votre liste, un nom complet par ligne. Pour attribuer une table, ajoutez-la
+            après un point-virgule (ou collez directement deux colonnes d&apos;un tableur). Les
+            doublons sont ignorés.
           </p>
           <TextArea
             rows={6}
-            placeholder={"Jean Mba\nArmand Obiang\n…"}
+            placeholder={"Jean Mba ; 5\nArmand Obiang ; 5\nClarisse Ndong\n…"}
             value={bulk}
             onChange={(e) => setBulk(e.target.value)}
           />
@@ -149,16 +186,28 @@ export default function GuestsManager({ supabase, eventId }) {
         </div>
       )}
 
-      <form onSubmit={addOne} className="mb-5 flex flex-col sm:flex-row gap-2">
+      <form onSubmit={addOne} className="mb-5 flex flex-col gap-2 sm:flex-row">
         <Input
           placeholder="Ajouter un invité (prénom et nom)"
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
-          className="w-full"
+          aria-label="Nom de l'invité"
+          className="w-full sm:flex-1"
         />
-        <AdminButton icon="plus" busy={busy} onClick={addOne} type="submit" className="w-full sm:w-auto justify-center">
-          Ajouter
-        </AdminButton>
+        <div className="flex gap-2">
+          <div className="w-24 shrink-0">
+            <Input
+              placeholder="Table"
+              value={newTable}
+              onChange={(e) => setNewTable(e.target.value)}
+              aria-label="Table (facultatif)"
+              className="text-center"
+            />
+          </div>
+          <AdminButton icon="plus" busy={busy} type="submit" className="flex-1 justify-center sm:flex-none">
+            Ajouter
+          </AdminButton>
+        </div>
       </form>
 
       <Input
@@ -171,15 +220,20 @@ export default function GuestsManager({ supabase, eventId }) {
 
       <ul className="divide-y divide-cocoa/6 rounded-2xl border border-cocoa/8">
         {filtered.map((guest) => (
-          <li key={guest.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
-            <span className="flex flex-wrap items-center gap-2.5 text-sm text-cocoa/85">
-              {guest.full_name}
+          <li key={guest.id} className="flex items-center gap-2 px-3 py-2 sm:gap-3 sm:px-4">
+            <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2.5 gap-y-1 text-sm text-cocoa/85">
+              <span className="min-w-0 break-words">{guest.full_name}</span>
               {confirmedIds.has(guest.id) && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-olive/12 px-2.5 py-0.5 text-[0.62rem] font-medium uppercase tracking-[0.12em] text-olive-deep">
                   A confirmé
                 </span>
               )}
             </span>
+            <TableInput
+              guestName={guest.full_name}
+              value={guest.table_label}
+              onSave={(value) => saveTable(guest, value)}
+            />
             <IconButton icon="trash" label="Supprimer" variant="danger" onClick={() => remove(guest)} />
           </li>
         ))}

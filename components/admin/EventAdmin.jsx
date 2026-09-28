@@ -295,7 +295,7 @@ function HomeShortcuts({ slug, onNavigate }) {
     { icon: "pencil", title: "Ma page", text: "Textes, photo, programme, lieux et galerie.", onClick: () => onNavigate("infos") },
     { icon: "users", title: "Liste des invités", text: "Seuls ces noms peuvent confirmer leur présence.", onClick: () => onNavigate("liste") },
     { icon: "check", title: "Réponses", text: "Qui a confirmé, et leurs petits mots.", onClick: () => onNavigate("reponses") },
-    { icon: "seat", title: "Tables et billets", text: "Attribuez les tables et téléchargez les billets.", onClick: () => onNavigate("tables") },
+    { icon: "seat", title: "Tables et billets", text: "Attribuez les tables et envoyez les billets.", onClick: () => onNavigate("tables") },
     { icon: "camera", title: "Scanner les billets", text: "À l'entrée, le jour J : nom et table de l'invité.", onClick: () => onNavigate("scanner") },
   ];
 

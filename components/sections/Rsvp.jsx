@@ -15,6 +15,8 @@ import { formatDateFr } from "@/lib/utils";
  * puis la réponse est enregistrée dans Supabase.
  * Des suggestions de noms apparaissent pendant la saisie (dès 2 caractères),
  * sans jamais exposer la liste complète des invités.
+ * Une fois la présence confirmée, le billet PDF (QR code) est généré et
+ * téléchargé aussitôt, avec la possibilité de le partager (WhatsApp…).
  */
 export default function Rsvp({ event }) {
   const eventSlug = event.slug;
@@ -23,6 +25,46 @@ export default function Rsvp({ event }) {
   const [status, setStatus] = useState("idle"); // idle | submitting | success | error
   const [feedback, setFeedback] = useState("");
   const [confirmedName, setConfirmedName] = useState("");
+
+  // Billet : idle (pas de billet, ex. mode démo) | building | ready | error
+  const [ticketStatus, setTicketStatus] = useState("idle");
+  const [ticketFile, setTicketFile] = useState(null); // { bytes, filename }
+  const [canShare, setCanShare] = useState(false);
+  const ticketInfoRef = useRef(null); // { id, guestName } renvoyé par l'API
+  // Module PDF gardé sous la main : le partage doit partir directement du
+  // clic, sans attente, sinon certains navigateurs le refusent.
+  const pdfModuleRef = useRef(null);
+
+  const prepareTicket = async (modulePromise, autoDownload) => {
+    const info = ticketInfoRef.current;
+    if (!info) return;
+    setTicketStatus("building");
+    try {
+      const pdf = await modulePromise;
+      pdfModuleRef.current = pdf;
+      const bytes = await pdf.buildTicketPdf({
+        event,
+        rsvp: { id: info.id, guest_name: info.guestName },
+      });
+      const filename = pdf.ticketFileName(info.guestName);
+      setTicketFile({ bytes, filename });
+      setCanShare(pdf.canSharePdf());
+      setTicketStatus("ready");
+      if (autoDownload) pdf.downloadPdf(bytes, filename);
+    } catch {
+      setTicketStatus("error");
+    }
+  };
+
+  const downloadTicket = () =>
+    pdfModuleRef.current?.downloadPdf(ticketFile.bytes, ticketFile.filename);
+
+  const shareTicket = () =>
+    pdfModuleRef.current?.sharePdf(
+      ticketFile.bytes,
+      ticketFile.filename,
+      `Billet · ${event.bride_name} & ${event.groom_name}`,
+    );
 
   const [suggestions, setSuggestions] = useState([]);
   const [highlighted, setHighlighted] = useState(-1);
@@ -94,6 +136,10 @@ export default function Rsvp({ event }) {
     setStatus("submitting");
     setFeedback("");
 
+    // Chargé en parallèle de l'envoi : le billet est prêt dès la confirmation.
+    const pdfModule = import("@/lib/ticket-pdf");
+    pdfModule.catch(() => {});
+
     try {
       const response = await fetch("/api/rsvp", {
         method: "POST",
@@ -105,6 +151,10 @@ export default function Rsvp({ event }) {
       if (response.ok && payload.ok) {
         setConfirmedName(payload.guestName || name);
         setStatus("success");
+        if (payload.ticket) {
+          ticketInfoRef.current = payload.ticket;
+          prepareTicket(pdfModule, true);
+        }
       } else {
         setStatus("error");
         setFeedback(payload.error || "Une erreur est survenue. Merci de réessayer.");
@@ -177,7 +227,7 @@ export default function Rsvp({ event }) {
               initial={{ opacity: 0, scale: 0.88, y: 24 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 160, damping: 17 }}
-              className="relative overflow-hidden rounded-[2rem] bg-cream p-10 text-center shadow-2xl sm:p-14"
+              className="relative overflow-hidden rounded-[2rem] bg-cream px-6 py-10 text-center shadow-2xl sm:p-14"
             >
               <FloatingHearts />
               <motion.span
@@ -205,6 +255,67 @@ export default function Rsvp({ event }) {
                 Votre présence est confirmée. Nous avons déjà hâte de partager ce
                 moment avec vous.
               </motion.p>
+
+              {ticketStatus !== "idle" && (
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, ease: EASE, delay: 0.65 }}
+                  className="relative mx-auto mt-8 max-w-sm rounded-2xl border border-terracotta/20 bg-white/80 p-5 sm:p-6"
+                >
+                  <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-rust/10 text-rust">
+                    <Icon name="ticket" className="h-5 w-5" />
+                  </span>
+                  <p className="mt-3 font-serif text-xl font-medium text-cocoa">Votre billet d&apos;entrée</p>
+
+                  {ticketStatus === "building" && (
+                    <p className="mt-2 flex items-center justify-center gap-2 text-sm font-light text-cocoa/60">
+                      <Icon name="loader" className="h-4 w-4 animate-spin-slow" />
+                      Préparation de votre billet…
+                    </p>
+                  )}
+
+                  {ticketStatus === "error" && (
+                    <>
+                      <p className="mt-2 text-sm font-light text-rust">
+                        Le billet n&apos;a pas pu être préparé.
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        icon="refresh"
+                        onClick={() => prepareTicket(import("@/lib/ticket-pdf"), true)}
+                        className="mt-4"
+                      >
+                        Réessayer
+                      </Button>
+                    </>
+                  )}
+
+                  {ticketStatus === "ready" && (
+                    <>
+                      <p className="mt-2 text-sm leading-relaxed font-light text-cocoa/65">
+                        Il vient d&apos;être téléchargé. Présentez son QR code à l&apos;entrée, sur
+                        votre téléphone ou imprimé.
+                      </p>
+                      <div className="mt-5 flex flex-col gap-2.5">
+                        <Button size="sm" icon="download" onClick={downloadTicket} className="w-full py-3">
+                          Télécharger
+                        </Button>
+                        {canShare && (
+                          <Button size="sm" variant="outline" icon="share" onClick={shareTicket} className="w-full py-3">
+                            Partager
+                          </Button>
+                        )}
+                      </div>
+                      <p className="mt-4 text-xs leading-relaxed font-light text-cocoa/45">
+                        Billet égaré ? Confirmez à nouveau avec le même nom pour le récupérer.
+                      </p>
+                    </>
+                  )}
+                </motion.div>
+              )}
+
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

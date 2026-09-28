@@ -101,6 +101,9 @@ create table if not exists public.guests (
   id         uuid primary key default gen_random_uuid(),
   event_id   uuid not null references public.events(id) on delete cascade,
   full_name  text not null,
+  -- Table attribuée (voir migration 011), choisie dès l'ajout de l'invité ;
+  -- affichée au scan du billet, jamais imprimée dessus.
+  table_label text,
   created_at timestamptz not null default now()
 );
 
@@ -112,10 +115,7 @@ create table if not exists public.rsvp (
   guest_name    text not null,
   message       text,
   attending     boolean not null default true,
-  -- Placement (voir migration 010) : table/place attribuées par l'agence ou
-  -- le couple, et horodatage du scan du billet à l'entrée.
-  table_label   text,
-  seat_label    text,
+  -- Horodatage du scan du billet à l'entrée (voir migration 010).
   checked_in_at timestamptz,
   created_at    timestamptz not null default now(),
   unique (event_id, guest_id)

@@ -11,6 +11,8 @@ import { isRateLimited } from "@/lib/rate-limit";
  *    `guests`, jamais exposée au client : la requête passe par la clé
  *    service role, côté serveur uniquement).
  * 2. Enregistre (ou met à jour) la réponse dans la table `rsvp`.
+ * 3. Renvoie l'identifiant de la confirmation, encodé dans le QR code du
+ *    billet que l'invité télécharge aussitôt.
  */
 export async function POST(request) {
   if (await isRateLimited(request, "rsvp", 10, 60)) {
@@ -112,22 +114,31 @@ export async function POST(request) {
       guest = newGuest;
     }
 
-    const { error: upsertError } = await supabase.from("rsvp").upsert(
-      {
-        event_id: event.id,
-        guest_id: guest.id,
-        guest_name: guest.full_name,
-        message: message || null,
-        attending: true,
-      },
-      { onConflict: "event_id,guest_id" },
-    );
+    // Un invité qui confirme une seconde fois (ex. pour récupérer son
+    // billet) garde la même ligne, donc le même QR code. Le message n'est
+    // envoyé que s'il est renseigné, pour ne pas effacer le précédent.
+    const { data: rsvp, error: upsertError } = await supabase
+      .from("rsvp")
+      .upsert(
+        {
+          event_id: event.id,
+          guest_id: guest.id,
+          guest_name: guest.full_name,
+          ...(message ? { message } : {}),
+          attending: true,
+        },
+        { onConflict: "event_id,guest_id" },
+      )
+      .select("id, guest_name")
+      .single();
 
     if (upsertError) throw upsertError;
 
     return NextResponse.json({
       ok: true,
       guestName: guest.full_name.split(/\s+/)[0],
+      // De quoi générer le billet PDF côté navigateur (QR = identifiant).
+      ticket: { id: rsvp.id, guestName: rsvp.guest_name },
     });
   } catch (error) {
     console.error("RSVP error:", error?.message || error);

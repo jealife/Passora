@@ -2,46 +2,49 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Card, IconButton, Input, Notice } from "@/components/admin/ui";
-import Icon from "@/components/ui/Icons";
 import { LoaderCard } from "@/components/admin/ProgramManager";
-import { buildTicketPdf, downloadPdf } from "@/lib/ticket-pdf";
-import { classNames, normalizeName, slugify } from "@/lib/utils";
+import TableInput from "@/components/admin/TableInput";
+import { buildTicketPdf, canSharePdf, downloadPdf, sharePdf, ticketFileName } from "@/lib/ticket-pdf";
+import { classNames, normalizeName } from "@/lib/utils";
 
 /**
- * Attribution d'une table aux invités ayant confirmé, et téléchargement de
- * leur billet PDF (QR code) pour envoi manuel. La table est enregistrée
- * dès que le champ perd le focus. Accès direct à Supabase, comme
- * GuestsManager/RsvpList : "rsvp_admin_all" couvre déjà ces colonnes.
+ * Invités ayant confirmé : attribuer une table à ceux qui n'en ont pas
+ * encore, et leur envoyer leur billet PDF (téléchargement ou partage via
+ * WhatsApp, e-mail…). Utile surtout pour les confirmations antérieures aux
+ * billets : les nouveaux invités téléchargent le leur dès leur confirmation.
+ * La table appartient à l'invité (`guests.table_label`, migration 011) :
+ * c'est la même valeur que dans la liste des invités.
  */
 export default function SeatingManager({ supabase, event }) {
-  const [rows, setRows] = useState(null);
-  const [saved, setSaved] = useState({}); // id -> dernière table enregistrée
-  const [rowState, setRowState] = useState({}); // id -> "saving" | "saved" | "error"
+  const [rows, setRows] = useState(null); // [{ id, guest_id, guest_name, table_label }]
   const [search, setSearch] = useState("");
   const [onlyUnassigned, setOnlyUnassigned] = useState(false);
   const [error, setError] = useState(null);
-  const [downloadingId, setDownloadingId] = useState(null);
+  const [busy, setBusy] = useState(null); // { id, action } pendant la génération d'un billet
+  // L'admin n'est rendu que côté navigateur : `navigator` est disponible ici.
+  const [canShare] = useState(() => typeof navigator !== "undefined" && canSharePdf());
 
   useEffect(() => {
     supabase
       .from("rsvp")
-      .select("*")
+      .select("id, guest_id, guest_name, guests(table_label)")
       .eq("event_id", event.id)
       .order("guest_name", { ascending: true })
-      .then(({ data }) => {
-        const list = data || [];
-        setRows(list);
-        setSaved(Object.fromEntries(list.map((r) => [r.id, r.table_label || ""])));
+      .then(({ data, error: loadError }) => {
+        if (loadError) setError(`Chargement impossible : ${loadError.message}`);
+        setRows(
+          (data || []).map(({ guests, ...row }) => ({ ...row, table_label: guests?.table_label || "" })),
+        );
       });
   }, [supabase, event.id]);
 
   const byTable = useMemo(() => {
     const counts = new Map();
-    for (const value of Object.values(saved)) {
-      if (value) counts.set(value, (counts.get(value) || 0) + 1);
+    for (const row of rows || []) {
+      if (row.table_label) counts.set(row.table_label, (counts.get(row.table_label) || 0) + 1);
     }
     return [...counts.entries()].sort(([a], [b]) => a.localeCompare(b, "fr", { numeric: true }));
-  }, [saved]);
+  }, [rows]);
 
   const visible = useMemo(() => {
     if (!rows) return [];
@@ -49,50 +52,41 @@ export default function SeatingManager({ supabase, event }) {
     return rows.filter(
       (row) =>
         (!query || normalizeName(row.guest_name).includes(query)) &&
-        (!onlyUnassigned || !saved[row.id]),
+        (!onlyUnassigned || !row.table_label),
     );
-  }, [rows, search, onlyUnassigned, saved]);
+  }, [rows, search, onlyUnassigned]);
 
-  const setTable = (id, value) =>
-    setRows((list) => list.map((r) => (r.id === id ? { ...r, table_label: value } : r)));
-
-  const saveTable = async (row) => {
-    const value = (row.table_label || "").trim();
-    if (value === (saved[row.id] || "")) return;
-    setRowState((s) => ({ ...s, [row.id]: "saving" }));
+  const saveTable = async (row, value) => {
     const { error: updateError } = await supabase
-      .from("rsvp")
+      .from("guests")
       .update({ table_label: value || null })
-      .eq("id", row.id);
-    if (updateError) {
-      setRowState((s) => ({ ...s, [row.id]: "error" }));
-      setError(`Table de ${row.guest_name} non enregistrée : ${updateError.message}`);
-      return;
-    }
-    setSaved((s) => ({ ...s, [row.id]: value }));
-    setRowState((s) => ({ ...s, [row.id]: "saved" }));
-    setError(null);
+      .eq("id", row.guest_id);
+    if (updateError) return updateError.message;
+    setRows((list) => list.map((r) => (r.guest_id === row.guest_id ? { ...r, table_label: value } : r)));
   };
 
-  const download = async (row) => {
-    setDownloadingId(row.id);
+  const sendTicket = async (row, action) => {
+    setBusy({ id: row.id, action });
     try {
       const bytes = await buildTicketPdf({ event, rsvp: row });
-      downloadPdf(bytes, `billet-${slugify(row.guest_name)}.pdf`);
+      const filename = ticketFileName(row.guest_name);
+      if (action === "share") await sharePdf(bytes, filename, `Billet · ${row.guest_name}`);
+      else downloadPdf(bytes, filename);
     } catch (err) {
       setError(`Billet de ${row.guest_name} non généré : ${err.message}`);
     }
-    setDownloadingId(null);
+    setBusy(null);
   };
 
   if (!rows) return <LoaderCard />;
 
-  const unassigned = rows.filter((row) => !saved[row.id]).length;
+  const unassigned = rows.filter((row) => !row.table_label).length;
+  const isBusy = (row, action) => busy?.id === row.id && busy.action === action;
 
   return (
     <Card
-      title="Tables"
-      description="Attribuez une table à chaque invité ayant confirmé. Le billet ne mentionne pas la table : elle s'affiche au scan, à l'entrée."
+      title="Tables et billets"
+      description="Les invités qui ont confirmé. Attribuez une table à ceux qui n'en ont pas encore, et envoyez leur billet à ceux qui ont confirmé avant l'arrivée des billets. La table n'est pas imprimée sur le billet : elle s'affiche au scan, à l'entrée."
     >
       {rows.length === 0 ? (
         <p className="py-10 text-center text-sm font-light text-cocoa/50">
@@ -150,38 +144,32 @@ export default function SeatingManager({ supabase, event }) {
           {error && <Notice tone="error">{error}</Notice>}
 
           <ul className="divide-y divide-cocoa/6 overflow-hidden rounded-2xl border border-cocoa/8">
-            {visible.map((row) => {
-              const state = rowState[row.id];
-              return (
-                <li key={row.id} className="flex items-center gap-2.5 px-3 py-2.5 sm:gap-3 sm:px-4">
-                  <p className="min-w-0 flex-1 truncate text-sm text-cocoa">{row.guest_name}</p>
-                  <input
-                    value={row.table_label || ""}
-                    onChange={(e) => setTable(row.id, e.target.value)}
-                    onBlur={() => saveTable(row)}
-                    onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-                    placeholder="Table"
-                    aria-label={`Table de ${row.guest_name}`}
-                    className={classNames(
-                      "h-10 w-20 shrink-0 rounded-xl border bg-cream/50 px-2 text-center text-sm text-cocoa placeholder:text-cocoa/30 focus:outline-2 focus:outline-passora-gold/25 transition-colors",
-                      state === "error" ? "border-rust/60" : "border-cocoa/15 focus:border-passora-gold-deep",
-                    )}
-                  />
-                  <span className="flex w-4 shrink-0 justify-center" aria-live="polite">
-                    {state === "saving" && <Icon name="loader" className="h-4 w-4 animate-spin-slow text-cocoa/40" />}
-                    {state === "saved" && <Icon name="check" className="h-4 w-4 text-olive-deep" />}
-                    {state === "error" && <Icon name="x" className="h-4 w-4 text-rust" />}
-                  </span>
+            {visible.map((row) => (
+              <li key={row.id} className="flex items-center gap-2 px-3 py-2 sm:gap-3 sm:px-4">
+                <p className="min-w-0 flex-1 text-sm break-words text-cocoa">{row.guest_name}</p>
+                <TableInput
+                  guestName={row.guest_name}
+                  value={row.table_label}
+                  onSave={(value) => saveTable(row, value)}
+                />
+                {canShare && (
                   <IconButton
-                    icon={downloadingId === row.id ? "loader" : "download"}
-                    label={`Télécharger le billet de ${row.guest_name}`}
-                    onClick={() => download(row)}
-                    disabled={downloadingId === row.id}
-                    className={downloadingId === row.id ? "[&_svg]:animate-spin-slow" : ""}
+                    icon={isBusy(row, "share") ? "loader" : "share"}
+                    label={`Partager le billet de ${row.guest_name}`}
+                    onClick={() => sendTicket(row, "share")}
+                    disabled={Boolean(busy)}
+                    className={isBusy(row, "share") ? "[&_svg]:animate-spin-slow" : ""}
                   />
-                </li>
-              );
-            })}
+                )}
+                <IconButton
+                  icon={isBusy(row, "download") ? "loader" : "download"}
+                  label={`Télécharger le billet de ${row.guest_name}`}
+                  onClick={() => sendTicket(row, "download")}
+                  disabled={Boolean(busy)}
+                  className={isBusy(row, "download") ? "[&_svg]:animate-spin-slow" : ""}
+                />
+              </li>
+            ))}
             {visible.length === 0 && (
               <li className="px-4 py-8 text-center text-sm font-light text-cocoa/50">Aucun résultat.</li>
             )}
