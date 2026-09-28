@@ -5,6 +5,21 @@ import { AdminButton, Card, Notice } from "@/components/admin/ui";
 
 const READER_ID = "passora-qr-reader";
 
+/** Traduit les erreurs caméra du navigateur en message exploitable pour l'utilisateur. */
+function describeCameraError(err) {
+  const text = String(err?.message || err || "");
+  if (text.includes("NotAllowedError") || text.includes("Permission denied")) {
+    return "Autorisation caméra refusée. Ouvrez les réglages du site dans votre navigateur (l'icône ⓘ ou le cadenas à côté de l'adresse), autorisez la caméra pour ce site, puis rechargez la page.";
+  }
+  if (text.includes("NotFoundError")) {
+    return "Aucune caméra détectée sur cet appareil.";
+  }
+  if (text.includes("NotReadableError")) {
+    return "La caméra est déjà utilisée par une autre application. Fermez-la puis réessayez.";
+  }
+  return `Impossible d'accéder à la caméra : ${text}`;
+}
+
 /**
  * Lecture des billets à l'entrée : scanne le QR code (caméra du téléphone),
  * retrouve la confirmation correspondante pour CET événement et affiche
@@ -65,7 +80,7 @@ export default function Scanner({ supabase, event }) {
         );
       } catch (err) {
         if (!cancelled) {
-          setError(`Impossible d'accéder à la caméra : ${err?.message || err}`);
+          setError(describeCameraError(err));
           setScanning(false);
         }
       }
