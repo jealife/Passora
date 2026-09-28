@@ -15,6 +15,8 @@ import VenuesManager from "@/components/admin/VenuesManager";
 import GalleryManager from "@/components/admin/GalleryManager";
 import GuestsManager from "@/components/admin/GuestsManager";
 import RsvpList from "@/components/admin/RsvpList";
+import SeatingManager from "@/components/admin/SeatingManager";
+import Scanner from "@/components/admin/Scanner";
 import AdminAuthGate, { FullPageLoader } from "@/components/admin/AuthGate";
 
 const TABS = [
@@ -24,6 +26,8 @@ const TABS = [
   { key: "galerie", label: "Galerie", shortLabel: "Galerie", icon: "image" },
   { key: "invites", label: "Invités", shortLabel: "Invités", icon: "users" },
   { key: "rsvp", label: "Confirmations", shortLabel: "RSVP", icon: "check" },
+  { key: "placement", label: "Placement", shortLabel: "Places", icon: "seat" },
+  { key: "scanner", label: "Scanner", shortLabel: "Scanner", icon: "camera" },
 ];
 
 /**
@@ -193,6 +197,8 @@ function EventAdminContent({ supabase, slug, session }) {
             {tab === "galerie" && <GalleryManager supabase={supabase} eventId={event.id} />}
             {tab === "invites" && <GuestsManager supabase={supabase} eventId={event.id} />}
             {tab === "rsvp" && <RsvpList supabase={supabase} eventId={event.id} />}
+            {tab === "placement" && <SeatingManager supabase={supabase} event={event} />}
+            {tab === "scanner" && <Scanner supabase={supabase} event={event} />}
           </motion.div>
         </AnimatePresence>
       </main>

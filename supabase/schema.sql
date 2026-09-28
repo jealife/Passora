@@ -105,14 +105,19 @@ create table if not exists public.guests (
 );
 
 create table if not exists public.rsvp (
-  id         uuid primary key default gen_random_uuid(),
-  event_id   uuid not null references public.events(id) on delete cascade,
+  id            uuid primary key default gen_random_uuid(),
+  event_id      uuid not null references public.events(id) on delete cascade,
   -- cascade : supprimer un invité supprime aussi sa confirmation
-  guest_id   uuid references public.guests(id) on delete cascade,
-  guest_name text not null,
-  message    text,
-  attending  boolean not null default true,
-  created_at timestamptz not null default now(),
+  guest_id      uuid references public.guests(id) on delete cascade,
+  guest_name    text not null,
+  message       text,
+  attending     boolean not null default true,
+  -- Placement (voir migration 010) : table/place attribuées par l'agence ou
+  -- le couple, et horodatage du scan du billet à l'entrée.
+  table_label   text,
+  seat_label    text,
+  checked_in_at timestamptz,
+  created_at    timestamptz not null default now(),
   unique (event_id, guest_id)
 );
 
