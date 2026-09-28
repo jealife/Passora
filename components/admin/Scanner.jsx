@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { AdminButton, Card, Notice } from "@/components/admin/ui";
 
 const READER_ID = "passora-qr-reader";
@@ -9,7 +10,7 @@ const READER_ID = "passora-qr-reader";
 function describeCameraError(err) {
   const text = String(err?.message || err || "");
   if (text.includes("NotAllowedError") || text.includes("Permission denied")) {
-    return "Autorisation caméra refusée. Ouvrez les réglages du site dans votre navigateur (l'icône ⓘ ou le cadenas à côté de l'adresse), autorisez la caméra pour ce site, puis rechargez la page.";
+    return "Autorisation caméra refusée. Ouvrez les réglages du site dans votre navigateur (l'icône ⓘ ou le cadenas à côté de l'adresse), autorisez la caméra pour ce site, puis réessayez.";
   }
   if (text.includes("NotFoundError")) {
     return "Aucune caméra détectée sur cet appareil.";
@@ -29,7 +30,8 @@ function describeCameraError(err) {
  */
 export default function Scanner({ supabase, event }) {
   const scannerRef = useRef(null);
-  const [scanning, setScanning] = useState(false);
+  // idle → starting (juste après le clic) → scanning (caméra active)
+  const [status, setStatus] = useState("idle");
   const [result, setResult] = useState(null); // { rsvp } | { notFound: true }
   const [error, setError] = useState(null);
   const [confirming, setConfirming] = useState(false);
@@ -48,7 +50,7 @@ export default function Scanner({ supabase, event }) {
 
   const handleScan = async (rsvpId) => {
     await stopScanner();
-    setScanning(false);
+    setStatus("idle");
 
     const { data } = await supabase
       .from("rsvp")
@@ -60,37 +62,36 @@ export default function Scanner({ supabase, event }) {
     setResult(data ? { rsvp: data } : { notFound: true });
   };
 
-  // Démarre la caméra une fois que l'élément #passora-qr-reader est monté
-  // (donc après le rendu déclenché par `scanning`, pas avant).
-  useEffect(() => {
-    if (!scanning) return undefined;
-    let cancelled = false;
+  // Démarrée directement par le clic, dans la même fonction : certains
+  // navigateurs mobiles (Safari iOS notamment) n'affichent la demande
+  // d'autorisation caméra que si elle reste rattachée au geste de
+  // l'utilisateur — passer par un useEffect séparé (déclenché par un
+  // changement d'état sur un rendu ultérieur) la fait parfois refuser en
+  // silence, sans même l'afficher. `flushSync` force le conteneur
+  // #passora-qr-reader à exister dans le DOM avant l'appel, sans quitter
+  // ce même gestionnaire de clic.
+  const start = async () => {
+    setError(null);
+    setResult(null);
+    flushSync(() => setStatus("starting"));
 
-    (async () => {
+    try {
       const { Html5Qrcode } = await import("html5-qrcode");
-      if (cancelled) return;
       const instance = new Html5Qrcode(READER_ID);
       scannerRef.current = instance;
-      try {
-        await instance.start(
-          { facingMode: "environment" },
-          { fps: 10, qrbox: 240 },
-          (decodedText) => handleScan(decodedText),
-          () => {}, // échec de décodage sur une frame : ignoré, ce n'est pas une erreur
-        );
-      } catch (err) {
-        if (!cancelled) {
-          setError(describeCameraError(err));
-          setScanning(false);
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scanning]);
+      await instance.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 240 },
+        (decodedText) => handleScan(decodedText),
+        () => {}, // échec de décodage sur une frame : ignoré, ce n'est pas une erreur
+      );
+      setStatus("scanning");
+    } catch (err) {
+      scannerRef.current = null;
+      setError(describeCameraError(err));
+      setStatus("idle");
+    }
+  };
 
   useEffect(() => () => stopScanner(), []);
 
@@ -109,22 +110,24 @@ export default function Scanner({ supabase, event }) {
 
   const reset = async () => {
     await stopScanner();
-    setScanning(false);
+    setStatus("idle");
     setResult(null);
     setError(null);
   };
+
+  const showReader = status === "starting" || status === "scanning";
 
   return (
     <Card title="Scanner" description="Scannez le billet d'un invité à l'entrée pour retrouver sa table et sa place.">
       {error && <div className="mb-4"><Notice tone="error">{error}</Notice></div>}
 
-      {!scanning && !result && (
-        <AdminButton icon="camera" onClick={() => { setError(null); setScanning(true); }} className="w-full justify-center sm:w-auto">
+      {status === "idle" && !result && (
+        <AdminButton icon="camera" onClick={start} className="w-full justify-center sm:w-auto">
           Démarrer le scan
         </AdminButton>
       )}
 
-      {scanning && (
+      {showReader && (
         <div className="space-y-4">
           <div id={READER_ID} className="mx-auto max-w-sm overflow-hidden rounded-2xl border border-cocoa/10" />
           <AdminButton variant="subtle" icon="x" onClick={reset} className="w-full justify-center sm:w-auto">
