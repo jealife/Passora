@@ -5,6 +5,8 @@ import { flushSync } from "react-dom";
 import { AdminButton, Card, Notice } from "@/components/admin/ui";
 
 const READER_ID = "passora-qr-reader";
+// Conteneur requis par html5-qrcode pour décoder une photo (jamais affiché).
+const FILE_READER_ID = "passora-qr-file-reader";
 
 /** Traduit les erreurs caméra du navigateur en message exploitable pour l'utilisateur. */
 function describeCameraError(err) {
@@ -93,6 +95,27 @@ export default function Scanner({ supabase, event }) {
     }
   };
 
+  // Alternative sans flux vidéo : l'appareil photo natif prend une photo du
+  // billet, puis le QR est décodé dans l'image.
+  const scanPhoto = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setError(null);
+    setResult(null);
+    setStatus("decoding");
+    try {
+      const { Html5Qrcode } = await import("html5-qrcode");
+      const instance = new Html5Qrcode(FILE_READER_ID);
+      const text = await instance.scanFile(file, false);
+      instance.clear();
+      await handleScan(text);
+    } catch {
+      setError("Aucun QR code lisible sur cette photo. Cadrez le billet de plus près, bien éclairé, et réessayez.");
+      setStatus("idle");
+    }
+  };
+
   useEffect(() => () => stopScanner(), []);
 
   const confirmEntry = async () => {
@@ -122,10 +145,22 @@ export default function Scanner({ supabase, event }) {
       {error && <div className="mb-4"><Notice tone="error">{error}</Notice></div>}
 
       {status === "idle" && !result && (
-        <AdminButton icon="camera" onClick={start} className="w-full justify-center sm:w-auto">
-          Démarrer le scan
-        </AdminButton>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <AdminButton icon="camera" onClick={start} className="w-full justify-center sm:w-auto">
+            Démarrer le scan
+          </AdminButton>
+          <label className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-cocoa/5 px-5 py-2.5 text-xs font-medium uppercase tracking-[0.15em] text-cocoa transition-colors hover:bg-cocoa/10 sm:w-auto">
+            <input type="file" accept="image/*" capture="environment" onChange={scanPhoto} className="hidden" />
+            Prendre une photo du billet
+          </label>
+        </div>
       )}
+
+      {status === "decoding" && (
+        <p className="py-6 text-center text-sm font-light text-cocoa/60">Lecture du billet…</p>
+      )}
+
+      <div id={FILE_READER_ID} className="hidden" />
 
       {showReader && (
         <div className="space-y-4">

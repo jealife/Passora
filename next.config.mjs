@@ -23,7 +23,8 @@ const nextConfig = {
         headers: [
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          // camera=(self) : l'onglet Scanner de l'admin lit les billets avec la caméra.
+          { key: "Permissions-Policy", value: "camera=(self), microphone=(), geolocation=()" },
           { key: "X-Content-Type-Options", value: "nosniff" },
         ],
       },
