@@ -2,135 +2,132 @@
 
 import Link from "next/link";
 import Icon from "@/components/ui/Icons";
-import { AdminButton } from "@/components/admin/ui";
 import { classNames } from "@/lib/utils";
-import { countdownLabel, coupleName, percent, relativeTime } from "@/components/admin/agency/shared";
+import { Button, PageHeader, Panel } from "@/components/admin/agency/kit";
+import { countdownLabel, coupleName, percent } from "@/components/admin/agency/shared";
 
 /**
- * Aperçu de la plateforme : chiffres clés (hors démos), prochains
- * événements, dernières confirmations et points à surveiller.
+ * Aperçu de supervision : chiffres clés de la plateforme (hors démos),
+ * prochains événements et points à surveiller. Le détail d'un événement
+ * (qui a répondu, messages…) se consulte dans sa propre page.
  */
-export default function Overview({ data, openDialog, goTo }) {
+export default function Overview({ data, usersById, openDialog, goTo }) {
   const real = data.events.filter((event) => !event.isDemo);
   const upcoming = real
     .filter((event) => event.status === "upcoming")
     .sort((a, b) => a.daysLeft - b.daysLeft);
   const past = real.filter((event) => event.status === "past");
-  const totals = real.reduce(
-    (sum, event) => ({
-      guests: sum.guests + event.guests,
-      rsvp: sum.rsvp + event.rsvp,
-      checked: sum.checked + event.checked,
-    }),
-    { guests: 0, rsvp: 0, checked: 0 },
-  );
-  const eventsById = new Map(data.events.map((event) => [event.id, event]));
-  const activity = data.activity.filter((item) => !eventsById.get(item.event_id)?.isDemo).slice(0, 8);
-  const alerts = buildAlerts(real);
+  const guests = real.reduce((sum, event) => sum + event.guests, 0);
+  const answers = real.reduce((sum, event) => sum + event.rsvp, 0);
+  const clients = data.users.filter((user) => user.role !== "agency");
+  const alerts = buildAlerts(real, usersById);
 
   const now = new Date(data.now);
   const greeting = now.getHours() < 5 || now.getHours() >= 18 ? "Bonsoir" : "Bonjour";
 
+  const stats = [
+    {
+      label: "Événements à venir",
+      value: upcoming.length,
+      hint: `${past.length} passé${past.length > 1 ? "s" : ""}`,
+      onClick: () => goTo("evenements", "upcoming"),
+    },
+    {
+      label: "Clients",
+      value: clients.length,
+      hint: `${clients.filter((user) => user.events.length > 0).length} avec un événement`,
+      onClick: () => goTo("comptes"),
+    },
+    { label: "Invités gérés", value: guests, hint: `sur ${real.length} événement${real.length > 1 ? "s" : ""}` },
+    { label: "Taux de réponse", value: `${percent(answers, guests)} %`, hint: `${answers} confirmation${answers > 1 ? "s" : ""}` },
+  ];
+
   return (
-    <div className="space-y-5 sm:space-y-6">
-      <section className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-passora-ink via-cocoa to-passora-gold-deep px-6 py-6 text-cream shadow-xl shadow-passora-ink/20 sm:px-9 sm:py-8">
-        <div aria-hidden="true" className="pointer-events-none absolute -top-20 -right-16 h-64 w-64 rounded-full bg-passora-gold/25 blur-3xl" />
-        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-[0.65rem] font-medium uppercase tracking-[0.3em] text-cream/65">
-              {now.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
-            </p>
-            <h1 className="mt-1.5 font-serif text-3xl font-medium italic sm:text-4xl">{greeting}</h1>
-            <p className="mt-1.5 text-sm font-light text-cream/75">
-              {upcoming.length === 0
-                ? "Aucun événement à venir pour le moment."
-                : `${upcoming.length} événement${upcoming.length > 1 ? "s" : ""} à venir, le prochain ${
-                    upcoming[0].daysLeft === 0 ? "aujourd'hui" : `dans ${upcoming[0].daysLeft} jour${upcoming[0].daysLeft > 1 ? "s" : ""}`
-                  }.`}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <AdminButton icon="plus" onClick={() => openDialog("create-event")}>
+    <div className="space-y-8">
+      <PageHeader
+        eyebrow={now.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+        title={greeting}
+        text={
+          upcoming.length === 0
+            ? "Aucun événement à venir pour le moment."
+            : `${upcoming.length} événement${upcoming.length > 1 ? "s" : ""} à venir, le prochain ${
+                upcoming[0].daysLeft === 0
+                  ? "aujourd'hui"
+                  : `dans ${upcoming[0].daysLeft} jour${upcoming[0].daysLeft > 1 ? "s" : ""}`
+              }.`
+        }
+        actions={
+          <>
+            <Button icon="plus" onClick={() => openDialog("create-event")}>
               Nouvel événement
-            </AdminButton>
-            <AdminButton icon="users" variant="onDark" onClick={() => openDialog("create-account")}>
+            </Button>
+            <Button variant="outline" icon="users" onClick={() => openDialog("create-account")}>
               Nouveau compte
-            </AdminButton>
-          </div>
-        </div>
-      </section>
+            </Button>
+          </>
+        }
+      />
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat
-          icon="calendar"
-          label="À venir"
-          value={upcoming.length}
-          hint={`${past.length} passé${past.length > 1 ? "s" : ""}`}
-          onClick={() => goTo("evenements", "upcoming")}
-        />
-        <Stat icon="users" label="Invités" value={totals.guests} hint={`sur ${real.length} événement${real.length > 1 ? "s" : ""}`} />
-        <Stat
-          icon="check"
-          label="Confirmations"
-          value={totals.rsvp}
-          hint={`${percent(totals.rsvp, totals.guests)} % des invités`}
-        />
-        <Stat icon="ticket" label="Entrées scannées" value={totals.checked} hint="le jour J" />
-      </div>
+      <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-passora-ink/10 bg-passora-ink/10 lg:grid-cols-4">
+        {stats.map((stat) => {
+          const Tag = stat.onClick ? "button" : "div";
+          return (
+            <Tag
+              key={stat.label}
+              {...(stat.onClick ? { type: "button", onClick: stat.onClick } : {})}
+              className={classNames(
+                "flex flex-col bg-white p-5 text-left",
+                stat.onClick && "cursor-pointer transition-colors hover:bg-cream",
+              )}
+            >
+              <dt className="text-[0.66rem] font-medium tracking-[0.16em] text-passora-ink/50 uppercase">{stat.label}</dt>
+              <dd className="mt-3 font-serif text-4xl leading-none font-medium lining-nums">{stat.value}</dd>
+              <dd className="mt-2 text-xs text-passora-ink/50">{stat.hint}</dd>
+            </Tag>
+          );
+        })}
+      </dl>
 
-      {/* Mobile : prochains événements, points à surveiller, puis activité.
-          Grand écran : les points à surveiller occupent la colonne de droite. */}
-      <div className="grid gap-5 lg:grid-cols-3 lg:gap-6">
+      <div className="grid gap-6 lg:grid-cols-3">
         <Panel
           title="Prochains événements"
           className="lg:col-span-2"
+          bodyClassName=""
           action={
             <button
               type="button"
               onClick={() => goTo("evenements", "upcoming")}
-              className="cursor-pointer text-xs font-medium uppercase tracking-[0.15em] text-passora-gold-deep hover:text-cocoa"
+              className="cursor-pointer text-xs font-medium tracking-wide text-passora-gold-deep hover:text-passora-ink"
             >
               Tout voir
             </button>
           }
         >
           {upcoming.length === 0 ? (
-            <Empty>Aucun événement à venir.</Empty>
+            <p className="px-5 py-10 text-center text-sm text-passora-ink/50">Aucun événement à venir.</p>
           ) : (
-            <ul className="-mx-2">
-              {upcoming.slice(0, 5).map((event) => (
+            <ul className="divide-y divide-passora-ink/8">
+              {upcoming.slice(0, 6).map((event) => (
                 <li key={event.id}>
-                  <UpcomingRow event={event} />
+                  <UpcomingRow event={event} owner={usersById.get(event.owner_id)} />
                 </li>
               ))}
             </ul>
           )}
         </Panel>
 
-        <Panel title="À surveiller" className="self-start lg:row-span-2">
+        <Panel title="À surveiller" className="self-start" bodyClassName="">
           {alerts.length === 0 ? (
-            <div className="flex items-center gap-3 rounded-2xl bg-olive/10 p-4 text-sm text-olive-deep">
-              <Icon name="check" className="h-5 w-5 shrink-0" />
+            <p className="flex items-center gap-3 px-5 py-5 text-sm text-olive-deep">
+              <Icon name="check" className="h-4 w-4 shrink-0" />
               Tout est en ordre sur les événements à venir.
-            </div>
+            </p>
           ) : (
-            <ul className="space-y-2">
+            <ul className="divide-y divide-passora-ink/8">
               {alerts.map((alert) => (
                 <li key={`${alert.event.id}-${alert.key}`}>
                   <AlertRow alert={alert} openDialog={openDialog} />
                 </li>
-              ))}
-            </ul>
-          )}
-        </Panel>
-
-        <Panel title="Activité récente" className="lg:col-span-2">
-          {activity.length === 0 ? (
-            <Empty>Les confirmations des invités apparaîtront ici.</Empty>
-          ) : (
-            <ul className="divide-y divide-cocoa/6">
-              {activity.map((item) => (
-                <ActivityRow key={item.id} item={item} event={eventsById.get(item.event_id)} now={data.now} />
               ))}
             </ul>
           )}
@@ -141,15 +138,25 @@ export default function Overview({ data, openDialog, goTo }) {
 }
 
 /** Points d'attention des événements à venir, du plus au moins urgent. */
-function buildAlerts(events) {
+function buildAlerts(events, usersById) {
   const alerts = [];
   for (const event of events) {
     if (event.status === "past") continue;
+    const owner = usersById.get(event.owner_id);
     if (event.guests === 0) {
       alerts.push({ event, key: "guests", level: 0, text: "Liste d'invités vide : n'importe qui peut confirmer." });
     }
     if (!event.owner_id) {
-      alerts.push({ event, key: "owner", level: 1, text: "Aucun compte couple associé.", dialog: "owner" });
+      alerts.push({ event, key: "owner", level: 1, text: "Aucun compte client associé.", dialog: "owner" });
+    } else if (owner && !owner.lastSignInAt) {
+      alerts.push({
+        event,
+        key: "signin",
+        level: 1,
+        text: "Le client ne s'est jamais connecté.",
+        dialog: "reset-password",
+        target: owner,
+      });
     }
     if (event.status === "upcoming" && event.daysLeft <= 14 && event.guests > 0 && event.rsvp / event.guests < 0.5) {
       alerts.push({
@@ -166,108 +173,32 @@ function buildAlerts(events) {
   return alerts.sort((a, b) => a.level - b.level);
 }
 
-function Panel({ title, action, className, children }) {
-  return (
-    <section className={classNames("rounded-3xl border border-cocoa/10 bg-white p-5 shadow-sm sm:p-6", className)}>
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="font-serif text-xl font-medium text-cocoa">{title}</h2>
-        {action}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function Empty({ children }) {
-  return <p className="py-6 text-center text-sm font-light text-cocoa/50">{children}</p>;
-}
-
-function Stat({ icon, label, value, hint, onClick }) {
-  const Tag = onClick ? "button" : "div";
-  return (
-    <Tag
-      {...(onClick ? { type: "button", onClick } : {})}
-      className={classNames(
-        "rounded-2xl border border-cocoa/8 bg-white p-4 text-left shadow-sm sm:p-5",
-        onClick && "cursor-pointer transition-all hover:-translate-y-0.5 hover:border-passora-gold/40 hover:shadow-md",
-      )}
-    >
-      <span className="flex items-center gap-2 text-[0.65rem] font-medium uppercase tracking-[0.16em] text-cocoa/50">
-        <Icon name={icon} className="h-3.5 w-3.5 text-passora-gold-deep" />
-        {label}
-      </span>
-      <span className="mt-2 block font-serif text-4xl font-medium leading-none text-cocoa lining-nums">
-        {value.toLocaleString("fr-FR")}
-      </span>
-      <span className="mt-1.5 block text-xs font-light text-cocoa/50">{hint}</span>
-    </Tag>
-  );
-}
-
-function UpcomingRow({ event }) {
+function UpcomingRow({ event, owner }) {
   const date = event.wedding_date ? new Date(event.wedding_date) : null;
   const rate = percent(event.rsvp, event.guests);
   return (
-    <Link
-      href={`/admin/${event.slug}`}
-      className="group flex items-center gap-4 rounded-2xl px-2 py-2.5 transition-colors hover:bg-cream"
-    >
-      <span className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-2xl bg-passora-ink text-cream">
-        <span className="font-serif text-2xl leading-none lining-nums">{date ? date.getDate() : "?"}</span>
-        <span className="mt-0.5 text-[0.55rem] font-medium uppercase tracking-[0.15em] text-passora-gold">
+    <Link href={`/admin/${event.slug}`} className="group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-cream">
+      <span className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-md bg-passora-ink text-cream">
+        <span className="font-serif text-xl leading-none lining-nums">{date ? date.getDate() : "?"}</span>
+        <span className="mt-0.5 text-[0.55rem] font-medium tracking-[0.15em] text-passora-gold uppercase">
           {date ? date.toLocaleDateString("fr-FR", { month: "short" }).replace(".", "") : "date"}
         </span>
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-baseline justify-between gap-3">
-          <span className="truncate font-serif text-lg italic text-cocoa">{coupleName(event)}</span>
+          <span className="truncate font-serif text-lg font-medium">{coupleName(event)}</span>
           <span className="shrink-0 text-xs font-medium text-passora-gold-deep">{countdownLabel(event)}</span>
         </span>
-        <span className="mt-1.5 flex items-center gap-3">
-          <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-cocoa/8">
-            <span className="block h-full rounded-full bg-passora-gold" style={{ width: `${rate}%` }} />
+        <span className="mt-2 flex items-center gap-3">
+          <span className="h-1 flex-1 bg-passora-ink/8">
+            <span className="block h-full bg-passora-gold" style={{ width: `${rate}%` }} />
           </span>
-          <span className="shrink-0 text-xs text-cocoa/55 tabular-nums">
-            {event.rsvp}/{event.guests} réponses
-          </span>
+          <span className="shrink-0 text-xs text-passora-ink/55 lining-nums">{rate} % de réponses</span>
         </span>
+        <span className="mt-1 block truncate text-xs text-passora-ink/40">{owner?.email || "Aucun compte client"}</span>
       </span>
-      <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-cocoa/25 transition-colors group-hover:text-cocoa/60" />
+      <Icon name="chevron-right" className="h-4 w-4 shrink-0 text-passora-ink/25 transition-colors group-hover:text-passora-ink/60" />
     </Link>
-  );
-}
-
-function ActivityRow({ item, event, now }) {
-  return (
-    <li className="flex gap-3 py-3 first:pt-0 last:pb-0">
-      <span
-        className={classNames(
-          "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
-          item.checked_in_at ? "bg-passora-gold/20 text-passora-gold-deep" : "bg-olive/12 text-olive-deep",
-        )}
-      >
-        <Icon name={item.checked_in_at ? "ticket" : "check"} className="h-4 w-4" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="text-sm text-cocoa">
-          <span className="font-medium">{item.guest_name}</span>{" "}
-          <span className="font-light text-cocoa/70">{item.checked_in_at ? "est entré(e)" : "a confirmé"}</span>
-        </p>
-        <p className="mt-0.5 text-xs text-cocoa/50">
-          {event ? (
-            <Link href={`/admin/${event.slug}`} className="hover:text-cocoa">
-              {coupleName(event)}
-            </Link>
-          ) : (
-            "Événement supprimé"
-          )}{" "}
-          · {relativeTime(item.checked_in_at || item.created_at, now)}
-        </p>
-        {item.message && (
-          <p className="mt-1.5 line-clamp-2 font-serif text-sm italic text-cocoa/70">« {item.message} »</p>
-        )}
-      </div>
-    </li>
   );
 }
 
@@ -276,23 +207,21 @@ function AlertRow({ alert, openDialog }) {
     <>
       <span
         className={classNames(
-          "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full",
-          alert.level <= 1 ? "bg-rust/10 text-rust" : "bg-passora-gold/20 text-passora-gold-deep",
+          "mt-1.5 h-2 w-2 shrink-0",
+          alert.level <= 1 ? "bg-rust" : alert.level === 2 ? "bg-passora-gold" : "bg-passora-ink/25",
         )}
-      >
-        <Icon name="alert" className="h-3.5 w-3.5" />
-      </span>
+        aria-hidden="true"
+      />
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-medium text-cocoa">{coupleName(alert.event)}</span>
-        <span className="block text-xs leading-snug font-light text-cocoa/60">{alert.text}</span>
+        <span className="block truncate text-sm font-medium">{coupleName(alert.event)}</span>
+        <span className="block text-xs leading-snug text-passora-ink/60">{alert.text}</span>
       </span>
-      <Icon name="chevron-right" className="mt-1.5 h-4 w-4 shrink-0 text-cocoa/25" />
+      <Icon name="chevron-right" className="mt-1 h-4 w-4 shrink-0 text-passora-ink/25" />
     </>
   );
-  const className =
-    "flex w-full cursor-pointer items-start gap-3 rounded-2xl border border-cocoa/8 p-3 text-left transition-colors hover:border-passora-gold/40 hover:bg-cream/60";
+  const className = "flex w-full cursor-pointer items-start gap-3 px-5 py-3.5 text-left transition-colors hover:bg-cream";
   return alert.dialog ? (
-    <button type="button" onClick={() => openDialog(alert.dialog, alert.event)} className={className}>
+    <button type="button" onClick={() => openDialog(alert.dialog, alert.target || alert.event)} className={className}>
       {content}
     </button>
   ) : (

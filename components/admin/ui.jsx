@@ -1,9 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import Icon from "@/components/ui/Icons";
-import { EASE } from "@/components/motion/primitives";
 import { classNames } from "@/lib/utils";
 
 /* Primitives d'interface partagées par tous les écrans d'administration. */
@@ -55,8 +52,6 @@ export function AdminButton({ icon, variant = "primary", busy = false, className
     primary: "bg-passora-gold text-passora-ink hover:bg-passora-gold-deep",
     subtle: "bg-cocoa/5 text-cocoa hover:bg-cocoa/10",
     danger: "bg-transparent text-rust hover:bg-rust/10",
-    destructive: "bg-rust text-cream hover:bg-rust-deep",
-    onDark: "bg-cream/12 text-cream hover:bg-cream/20",
   };
   return (
     <button
@@ -108,82 +103,5 @@ export function Notice({ tone = "success", children }) {
     <p className={classNames("animate-fade-in rounded-xl px-4 py-2.5 text-sm", styles[tone])} role="status">
       {children}
     </p>
-  );
-}
-
-/**
- * Fenêtre modale : panneau qui monte du bas sur mobile, boîte centrée sur
- * grand écran. Échap ou un clic à côté la ferment.
- */
-export function Modal({ open, title, description, onClose, children }) {
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e) => e.key === "Escape" && onClose();
-    const previousOverflow = document.body.style.overflow;
-    document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [open, onClose]);
-
-  return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-passora-ink/40 backdrop-blur-sm sm:items-center sm:p-5"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          onClick={onClose}
-        >
-          <motion.div
-            role="dialog"
-            aria-modal="true"
-            aria-label={title}
-            onClick={(e) => e.stopPropagation()}
-            initial={{ y: 48, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 48, opacity: 0 }}
-            transition={{ duration: 0.28, ease: EASE }}
-            className="max-h-[92svh] w-full overflow-y-auto rounded-t-3xl bg-white p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] shadow-2xl sm:max-w-md sm:rounded-3xl sm:p-7"
-          >
-            <div className="mb-5 flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <h2 className="font-serif text-2xl font-medium text-cocoa">{title}</h2>
-                {description && <p className="mt-1 text-sm font-light text-cocoa/60">{description}</p>}
-              </div>
-              <IconButton icon="x" label="Fermer" onClick={onClose} className="-mt-1 -mr-2" />
-            </div>
-            {children}
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
-
-/** Petite étiquette de statut. */
-export function Badge({ tone = "neutral", icon, children, className = "" }) {
-  const styles = {
-    neutral: "bg-cocoa/6 text-cocoa/65",
-    gold: "bg-passora-gold/20 text-passora-ink",
-    success: "bg-olive/12 text-olive-deep",
-    warning: "bg-rust/10 text-rust",
-    ink: "bg-passora-ink text-cream",
-  };
-  return (
-    <span
-      className={classNames(
-        "inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-0.5 text-[0.62rem] font-medium uppercase tracking-[0.12em]",
-        styles[tone],
-        className,
-      )}
-    >
-      {icon && <Icon name={icon} className="h-3 w-3" />}
-      {children}
-    </span>
   );
 }
