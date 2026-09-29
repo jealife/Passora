@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Icon from "@/components/ui/Icons";
 import { EASE, staggerContainer, fadeUpItem } from "@/components/motion/primitives";
+import { eventTitle, eventTypeOf } from "@/lib/event-types";
 import { formatDateFr } from "@/lib/utils";
 
 /**
- * Bannière d'accueil personnalisée pour les mariés : salutation,
- * compte à rebours « J-x » et statistiques en direct de l'événement.
+ * Bannière d'accueil de l'espace client : salutation, compte à rebours
+ * « J-x » et statistiques en direct. Le vocabulaire suit le type
+ * d'événement (lib/event-types.js).
  */
 export default function WelcomeBanner({ supabase, event, onNavigate }) {
   const [stats, setStats] = useState(null);
@@ -35,7 +37,10 @@ export default function WelcomeBanner({ supabase, event, onNavigate }) {
     );
   }, [supabase, event]);
 
-  const firstNames = `${(event.bride_name || "").split(/\s+/)[0]} & ${(event.groom_name || "").split(/\s+/)[0]}`;
+  const type = eventTypeOf(event);
+  const heading = type.couple
+    ? `${(event.bride_name || "").split(/\s+/)[0]} & ${(event.groom_name || "").split(/\s+/)[0]}`
+    : eventTitle(event);
   const hour = now ? now.getHours() : 12;
   const greeting = hour < 5 || hour >= 18 ? "Bonsoir" : "Bonjour";
 
@@ -51,7 +56,9 @@ export default function WelcomeBanner({ supabase, event, onNavigate }) {
         ? `J-${daysLeft}`
         : daysLeft === 0
           ? "Jour J"
-          : "Mariés !";
+          : type.couple
+            ? "Mariés !"
+            : "Terminé";
 
   const quickStats = [
     { key: "liste", icon: "users", value: stats?.guests, label: "invités" },
@@ -91,19 +98,19 @@ export default function WelcomeBanner({ supabase, event, onNavigate }) {
               variants={fadeUpItem}
               className="text-[0.65rem] font-medium uppercase tracking-[0.28em] text-cream/65 sm:text-[0.68rem] sm:tracking-[0.3em]"
             >
-              {greeting}, futurs mariés
+              {type.audience ? `${greeting}, ${type.audience}` : greeting}
             </motion.p>
             <motion.h1
               variants={fadeUpItem}
               className="mt-1 font-serif text-2xl font-medium italic leading-tight sm:mt-1.5 sm:text-4xl"
             >
-              {firstNames}{" "}
+              {heading}
             </motion.h1>
             <motion.p
               variants={fadeUpItem}
               className="mt-1.5 text-[0.78rem] font-light leading-relaxed text-cream/75 sm:mt-2 sm:text-sm sm:text-cream/80"
             >
-              Votre grand jour se prépare ici : {" "}
+              {type.couple ? "Votre grand jour se prépare ici : " : "Votre événement se prépare ici : "}
               <span className="capitalize">
                 {event.wedding_date ? formatDateFr(event.wedding_date) : "date à définir"}
               </span>
@@ -135,7 +142,7 @@ export default function WelcomeBanner({ supabase, event, onNavigate }) {
                 {event.wedding_date && daysLeft > 0 ? "restants" : ""}
               </span>
               <span className="hidden sm:inline">
-                {!event.wedding_date ? "" : daysLeft > 0 ? "avant le oui" : "félicitations"}
+                {!event.wedding_date ? "" : daysLeft > 0 ? type.countdown : type.couple ? "félicitations" : "merci à tous"}
               </span>
             </span>
           </motion.div>

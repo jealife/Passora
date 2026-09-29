@@ -14,7 +14,8 @@ export async function GET(request) {
   try {
     const [users, { data: events, error }] = await Promise.all([
       listAllUsers(service),
-      service.from("events").select("id, slug, bride_name, groom_name, owner_id"),
+      // "*" : tolère une colonne encore absente (migration non appliquée).
+      service.from("events").select("*"),
     ]);
     if (error) throw error;
 
@@ -29,7 +30,14 @@ export async function GET(request) {
           lastSignInAt: u.last_sign_in_at || null,
           events: (events || [])
             .filter((e) => e.owner_id === u.id)
-            .map(({ id, slug, bride_name, groom_name }) => ({ id, slug, bride_name, groom_name })),
+            .map(({ id, slug, name, bride_name, groom_name, event_type }) => ({
+              id,
+              slug,
+              name,
+              bride_name,
+              groom_name,
+              event_type,
+            })),
         }))
         .sort((a, b) => (a.role === b.role ? a.email.localeCompare(b.email) : a.role === "agency" ? -1 : 1)),
     });

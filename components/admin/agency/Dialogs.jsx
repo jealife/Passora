@@ -3,9 +3,9 @@
 import { useState } from "react";
 import Icon from "@/components/ui/Icons";
 import { Button, Field, Message, Sheet, TextInput } from "@/components/admin/agency/kit";
-import { LAYOUT_TEMPLATES } from "@/lib/layouts";
+import { DEFAULT_EVENT_TYPE, EVENT_TYPES, eventTitle, templatesFor } from "@/lib/event-types";
 import { classNames, slugify } from "@/lib/utils";
-import { agencyApi, coupleName, credentialsMessage } from "@/components/admin/agency/shared";
+import { agencyApi, credentialsMessage } from "@/components/admin/agency/shared";
 
 /**
  * Fenêtres d'action du tableau de bord agence. `dialog` = { type, payload }
@@ -37,11 +37,11 @@ export default function AgencyDialogs({ dialog, onClose, supabase, users, onChan
         <CreateAccountForm {...props} />
       </Sheet>
 
-      <Sheet open={type === "owner"} title="Compte propriétaire" description={target && coupleName(target)} onClose={onClose}>
+      <Sheet open={type === "owner"} title="Compte propriétaire" description={target && eventTitle(target)} onClose={onClose}>
         <OwnerForm event={target} users={users} {...props} />
       </Sheet>
 
-      <Sheet open={type === "delete-event"} title="Supprimer l'événement" description={target && coupleName(target)} onClose={onClose}>
+      <Sheet open={type === "delete-event"} title="Supprimer l'événement" description={target && eventTitle(target)} onClose={onClose}>
         <DeleteEventForm event={target} {...props} />
       </Sheet>
 
@@ -139,23 +139,64 @@ function AccountSuggestions({ id, users }) {
   );
 }
 
+/** Bouton de choix exclusif (type, mise en page, rôle). */
+function Choice({ selected, onSelect, icon, title, text }) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={selected}
+      className={classNames(
+        "flex cursor-pointer items-start gap-2.5 rounded-md border px-3 py-2.5 text-left transition-colors",
+        selected ? "border-passora-ink bg-white" : "border-passora-ink/15 hover:border-passora-ink/40",
+      )}
+    >
+      {icon && (
+        <Icon
+          name={icon}
+          className={classNames("mt-0.5 h-4 w-4 shrink-0", selected ? "text-passora-gold-deep" : "text-passora-ink/40")}
+        />
+      )}
+      <span className="min-w-0">
+        <span className={classNames("block text-sm", selected ? "font-medium text-passora-ink" : "text-passora-ink/70")}>
+          {title}
+        </span>
+        {text && <span className="block text-xs text-passora-ink/50">{text}</span>}
+      </span>
+    </button>
+  );
+}
+
 function CreateEventForm({ supabase, users, onClose, onChanged }) {
+  const [typeId, setTypeId] = useState(DEFAULT_EVENT_TYPE);
   const [brideName, setBrideName] = useState("");
   const [groomName, setGroomName] = useState("");
+  const [title, setTitle] = useState("");
   const [slugOverride, setSlugOverride] = useState(null);
   const [ownerEmail, setOwnerEmail] = useState("");
-  const [layout, setLayout] = useState(LAYOUT_TEMPLATES[0].id);
+  const [layout, setLayout] = useState(null);
   const [created, setCreated] = useState(null);
   const { busy, error, run } = useAction();
 
-  const slug = slugOverride ?? slugify(`${brideName} ${groomName}`);
+  const type = EVENT_TYPES.find((t) => t.id === typeId);
+  const templates = templatesFor(typeId);
+  const selectedLayout = templates.some((t) => t.id === layout) ? layout : templates[0]?.id;
+  const slug = slugOverride ?? slugify(type.couple ? `${brideName} ${groomName}` : title);
 
   const submit = (e) => {
     e.preventDefault();
     run(async () => {
       const result = await agencyApi(supabase, "/api/admin/create-event", {
         method: "POST",
-        body: { brideName, groomName, slug: slugify(slug), ownerEmail, layoutTemplate: layout },
+        body: {
+          eventType: typeId,
+          brideName,
+          groomName,
+          title,
+          slug: slugify(slug),
+          ownerEmail,
+          layoutTemplate: selectedLayout,
+        },
       });
       setCreated({ ...result, ownerEmail: ownerEmail.trim().toLowerCase() });
       onChanged();
@@ -167,7 +208,7 @@ function CreateEventForm({ supabase, users, onClose, onChanged }) {
       <div className="space-y-4">
         <Message tone="success">
           Événement créé : /e/{created.slug}
-          {created.existingAccount && ". Le couple se connecte avec son compte habituel."}
+          {created.existingAccount && ". Le client se connecte avec son compte habituel."}
         </Message>
         {created.tempPassword && <Credentials email={created.ownerEmail} password={created.tempPassword} />}
         <Actions>
@@ -184,18 +225,44 @@ function CreateEventForm({ supabase, users, onClose, onChanged }) {
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Prénom de la mariée">
-          <TextInput value={brideName} onChange={(e) => setBrideName(e.target.value)} required />
+      <Field label="Type d'événement">
+        <div className="grid grid-cols-2 gap-2">
+          {EVENT_TYPES.map((option) => (
+            <Choice
+              key={option.id}
+              selected={typeId === option.id}
+              onSelect={() => setTypeId(option.id)}
+              icon={option.icon}
+              title={option.label}
+            />
+          ))}
+        </div>
+      </Field>
+
+      {type.couple ? (
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Prénom de la mariée">
+            <TextInput value={brideName} onChange={(e) => setBrideName(e.target.value)} required />
+          </Field>
+          <Field label="Prénom du marié">
+            <TextInput value={groomName} onChange={(e) => setGroomName(e.target.value)} required />
+          </Field>
+        </div>
+      ) : (
+        <Field label="Nom de l'événement">
+          <TextInput
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder={`Ex. ${type.label} de …`}
+            required
+          />
         </Field>
-        <Field label="Prénom du marié">
-          <TextInput value={groomName} onChange={(e) => setGroomName(e.target.value)} required />
-        </Field>
-      </div>
+      )}
+
       <Field label="Lien de la page" hint={`/e/${slugify(slug) || "…"}`}>
         <TextInput value={slug} onChange={(e) => setSlugOverride(e.target.value)} required />
       </Field>
-      <Field label="Email du couple" hint="Un compte est créé s'il n'existe pas encore.">
+      <Field label="Email du client" hint="Un compte est créé s'il n'existe pas encore.">
         <TextInput
           type="email"
           list="create-event-accounts"
@@ -205,26 +272,27 @@ function CreateEventForm({ supabase, users, onClose, onChanged }) {
         />
         <AccountSuggestions id="create-event-accounts" users={users} />
       </Field>
-      <Field label="Mise en page">
-        <div className="grid grid-cols-2 gap-2">
-          {LAYOUT_TEMPLATES.map((template) => (
-            <button
-              key={template.id}
-              type="button"
-              onClick={() => setLayout(template.id)}
-              aria-pressed={layout === template.id}
-              className={classNames(
-                "cursor-pointer rounded-md border px-3 py-2.5 text-left text-sm transition-colors",
-                layout === template.id
-                  ? "border-passora-ink bg-white text-passora-ink"
-                  : "border-passora-ink/15 text-passora-ink/60 hover:border-passora-ink/40",
-              )}
-            >
-              {template.name}
-            </button>
-          ))}
-        </div>
-      </Field>
+
+      {templates.length > 0 ? (
+        <Field label="Mise en page">
+          <div className="grid grid-cols-2 gap-2">
+            {templates.map((template) => (
+              <Choice
+                key={template.id}
+                selected={selectedLayout === template.id}
+                onSelect={() => setLayout(template.id)}
+                title={template.name}
+              />
+            ))}
+          </div>
+        </Field>
+      ) : (
+        <p className="rounded-md border border-passora-ink/10 bg-white px-4 py-3 text-xs leading-relaxed text-passora-ink/60">
+          Pas encore de modèle de page pour ce type : l&apos;événement se gère déjà (invités, billets,
+          scanner) et sa page publique indique qu&apos;elle est en préparation.
+        </p>
+      )}
+
       {error && <Message tone="error">{error}</Message>}
       <Actions>
         <Button variant="outline" onClick={onClose} className="justify-center">
@@ -272,24 +340,8 @@ function CreateAccountForm({ supabase, onClose, onChanged }) {
       </Field>
       <Field label="Rôle">
         <div className="grid grid-cols-2 gap-2">
-          {[
-            { id: "couple", label: "Couple", text: "Gère ses événements" },
-            { id: "agency", label: "Agence", text: "Accès complet" },
-          ].map((option) => (
-            <button
-              key={option.id}
-              type="button"
-              onClick={() => setRole(option.id)}
-              aria-pressed={role === option.id}
-              className={classNames(
-                "cursor-pointer rounded-md border px-3 py-2.5 text-left transition-colors",
-                role === option.id ? "border-passora-ink bg-white" : "border-passora-ink/15 hover:border-passora-ink/40",
-              )}
-            >
-              <span className="block text-sm font-medium text-passora-ink">{option.label}</span>
-              <span className="block text-xs text-passora-ink/55">{option.text}</span>
-            </button>
-          ))}
+          <Choice selected={role === "couple"} onSelect={() => setRole("couple")} title="Client" text="Gère ses événements" />
+          <Choice selected={role === "agency"} onSelect={() => setRole("agency")} title="Agence" text="Accès complet" />
         </div>
       </Field>
       {error && <Message tone="error">{error}</Message>}
@@ -514,7 +566,7 @@ function DeleteAccountForm({ supabase, user, onClose, onChanged }) {
       <p className="text-sm text-passora-ink/65">
         La personne ne pourra plus se connecter.
         {user.events.length > 0 &&
-          ` Ses événements (${user.events.map(coupleName).join(", ")}) restent en ligne, sans compte propriétaire.`}
+          ` Ses événements (${user.events.map(eventTitle).join(", ")}) restent en ligne, sans compte propriétaire.`}
       </p>
       {error && <Message tone="error">{error}</Message>}
       <Actions>

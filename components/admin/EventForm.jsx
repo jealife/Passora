@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { AdminButton, Card, Field, Input, Notice, TextArea } from "@/components/admin/ui";
 import { THEME_PRESETS } from "@/lib/theme";
-import { LAYOUT_TEMPLATES } from "@/lib/layouts";
+import { eventTypeOf, templatesFor } from "@/lib/event-types";
 import { classNames } from "@/lib/utils";
 
 /** timestamptz -> valeur pour <input type="datetime-local"> (heure locale). */
@@ -26,6 +26,11 @@ const DEFAULT_THEME = {
 
 /** Informations générales de l'événement (textes, date, médias). */
 export default function EventForm({ supabase, event, onSaved, isAgency }) {
+  // Les champs propres au mariage (mariés, parents…) ne s'affichent que
+  // pour ce type ; les autres types se nomment par leur nom d'événement.
+  const type = eventTypeOf(event);
+  const couple = Boolean(type.couple);
+  const templates = templatesFor(type.id);
   const [form, setForm] = useState({
     name: event.name || "",
     bride_name: event.bride_name || "",
@@ -160,26 +165,39 @@ export default function EventForm({ supabase, event, onSaved, isAgency }) {
 
   return (
     <div className="space-y-6">
-      <Card title="Les mariés" description="Noms affichés sur toute la page.">
-        <div className="grid gap-5 sm:grid-cols-2">
-          <Field label="La mariée">
-            <Input value={form.bride_name} onChange={set("bride_name")} />
-          </Field>
-          <Field label="Le marié">
-            <Input value={form.groom_name} onChange={set("groom_name")} />
-          </Field>
-          <Field label="Phrase d'accroche" hint="Affichée au-dessus des noms dans le hero.">
-            <Input value={form.tagline} onChange={set("tagline")} />
-          </Field>
-          <Field label="Nom de l'événement" hint="Usage interne et titre de la page.">
-            <Input value={form.name} onChange={set("name")} />
-          </Field>
-        </div>
-      </Card>
+      {couple ? (
+        <Card title="Les mariés" description="Noms affichés sur toute la page.">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Field label="La mariée">
+              <Input value={form.bride_name} onChange={set("bride_name")} />
+            </Field>
+            <Field label="Le marié">
+              <Input value={form.groom_name} onChange={set("groom_name")} />
+            </Field>
+            <Field label="Phrase d'accroche" hint="Affichée au-dessus des noms dans le hero.">
+              <Input value={form.tagline} onChange={set("tagline")} placeholder={type.tagline} />
+            </Field>
+            <Field label="Nom de l'événement" hint="Usage interne et titre de la page.">
+              <Input value={form.name} onChange={set("name")} />
+            </Field>
+          </div>
+        </Card>
+      ) : (
+        <Card title="L'événement" description={`${type.label} : nom affiché sur toute la page et sur les billets.`}>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Field label="Nom de l'événement">
+              <Input value={form.name} onChange={set("name")} />
+            </Field>
+            <Field label="Phrase d'accroche" hint="Affichée au-dessus du nom.">
+              <Input value={form.tagline} onChange={set("tagline")} placeholder={type.tagline} />
+            </Field>
+          </div>
+        </Card>
+      )}
 
       <Card title="Date & heure" description="Alimente le hero et le compte à rebours.">
         <div className="grid items-end gap-5 sm:grid-cols-2">
-          <Field label="Date et heure du mariage">
+          <Field label={couple ? "Date et heure du mariage" : "Date et heure"}>
             <Input type="datetime-local" value={form.wedding_date} onChange={set("wedding_date")} />
           </Field>
           <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-cocoa/12 bg-cream/50 px-4 py-3">
@@ -199,12 +217,15 @@ export default function EventForm({ supabase, event, onSaved, isAgency }) {
         </div>
       </Card>
 
-      <Card title="Photo des mariés" description="Grande image du hero (recommandé : 2000 px de large).">
+      <Card
+        title={couple ? "Photo des mariés" : "Photo d'accueil"}
+        description="Grande image du haut de la page (recommandé : 2000 px de large)."
+      >
         <div className="flex flex-wrap items-center gap-5">
           {form.hero_image_url ? (
             <Image
               src={form.hero_image_url}
-              alt="Aperçu de la photo des mariés"
+              alt="Aperçu de la photo d'accueil"
               width={176}
               height={112}
               className="h-28 w-44 rounded-2xl object-cover shadow"
@@ -232,7 +253,10 @@ export default function EventForm({ supabase, event, onSaved, isAgency }) {
         </div>
       </Card>
 
-      <Card title="Notre histoire" description="Titre et texte de la section « Notre histoire ».">
+      <Card
+        title={couple ? "Notre histoire" : "Présentation"}
+        description={couple ? "Titre et texte de la section « Notre histoire »." : "Texte de présentation de l'événement."}
+      >
         <div className="space-y-5">
           <Field label="Titre de la section">
             <Input value={form.story_title} onChange={set("story_title")} />
@@ -320,35 +344,37 @@ export default function EventForm({ supabase, event, onSaved, isAgency }) {
         </div>
       </Card>
 
-      <Card
-        title="Parents des mariés"
-        description="Affiché avant les noms des mariés sur les modèles qui le prennent en charge."
-      >
-        <div className="space-y-5">
-          <ToggleField
-            checked={form.show_parents}
-            onChange={set("show_parents")}
-            label="Afficher les parents"
-          />
-          <Field label="Texte de bénédiction" hint="Ex. « Avec la bénédiction de Dieu et de nos parents ». ">
-            <TextArea rows={2} value={form.parents_blessing_text} onChange={set("parents_blessing_text")} />
-          </Field>
-          <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="Mère de la mariée">
-              <Input value={form.bride_mother_name} onChange={set("bride_mother_name")} />
+      {couple && (
+        <Card
+          title="Parents des mariés"
+          description="Affiché avant les noms des mariés sur les modèles qui le prennent en charge."
+        >
+          <div className="space-y-5">
+            <ToggleField
+              checked={form.show_parents}
+              onChange={set("show_parents")}
+              label="Afficher les parents"
+            />
+            <Field label="Texte de bénédiction" hint="Ex. « Avec la bénédiction de Dieu et de nos parents ». ">
+              <TextArea rows={2} value={form.parents_blessing_text} onChange={set("parents_blessing_text")} />
             </Field>
-            <Field label="Père de la mariée">
-              <Input value={form.bride_father_name} onChange={set("bride_father_name")} />
-            </Field>
-            <Field label="Mère du marié">
-              <Input value={form.groom_mother_name} onChange={set("groom_mother_name")} />
-            </Field>
-            <Field label="Père du marié">
-              <Input value={form.groom_father_name} onChange={set("groom_father_name")} />
-            </Field>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Field label="Mère de la mariée">
+                <Input value={form.bride_mother_name} onChange={set("bride_mother_name")} />
+              </Field>
+              <Field label="Père de la mariée">
+                <Input value={form.bride_father_name} onChange={set("bride_father_name")} />
+              </Field>
+              <Field label="Mère du marié">
+                <Input value={form.groom_mother_name} onChange={set("groom_mother_name")} />
+              </Field>
+              <Field label="Père du marié">
+                <Input value={form.groom_father_name} onChange={set("groom_father_name")} />
+              </Field>
+            </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+      )}
 
       <Card title="Code vestimentaire">
         <div className="space-y-5">
@@ -435,12 +461,18 @@ export default function EventForm({ supabase, event, onSaved, isAgency }) {
         description="Affichés uniquement s'ils sont renseignés, aucun interrupteur nécessaire."
       >
         <div className="grid gap-5 sm:grid-cols-2">
-          <Field label="Contact de la mariée" hint="Numéro affiché pour les questions RSVP.">
+          {/* Hors mariage, un seul contact (celui de l'organisateur), rangé dans bride_contact_phone. */}
+          <Field
+            label={couple ? "Contact de la mariée" : "Téléphone de contact"}
+            hint="Numéro affiché pour les questions RSVP."
+          >
             <Input value={form.bride_contact_phone} onChange={set("bride_contact_phone")} />
           </Field>
-          <Field label="Contact du marié">
-            <Input value={form.groom_contact_phone} onChange={set("groom_contact_phone")} />
-          </Field>
+          {couple && (
+            <Field label="Contact du marié">
+              <Input value={form.groom_contact_phone} onChange={set("groom_contact_phone")} />
+            </Field>
+          )}
           <Field label="Date limite de confirmation">
             <Input type="date" value={form.rsvp_deadline} onChange={set("rsvp_deadline")} />
           </Field>
@@ -450,7 +482,13 @@ export default function EventForm({ supabase, event, onSaved, isAgency }) {
       {isAgency && (
       <Card title="Mise en page" description="La structure complète de la page publique de cet événement.">
         <div className="grid gap-3 sm:grid-cols-2">
-          {LAYOUT_TEMPLATES.map((tpl) => (
+          {templates.length === 0 && (
+            <p className="text-sm font-light text-cocoa/60 sm:col-span-2">
+              Pas encore de modèle de page pour le type « {type.label} » : la page publique indique
+              qu&apos;elle est en préparation.
+            </p>
+          )}
+          {templates.map((tpl) => (
             <button
               key={tpl.id}
               type="button"
@@ -555,7 +593,7 @@ export default function EventForm({ supabase, event, onSaved, isAgency }) {
         </Field>
       </Card>
 
-      <div className="sticky bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between sm:justify-end gap-3 rounded-2xl sm:rounded-full border border-cocoa/10 bg-cream/95 p-3 sm:px-4 sm:py-3 shadow-lg backdrop-blur-md z-20">
+      <div className="sticky bottom-[calc(4.75rem+env(safe-area-inset-bottom))] lg:bottom-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between sm:justify-end gap-3 rounded-2xl sm:rounded-full border border-cocoa/10 bg-cream/95 p-3 sm:px-4 sm:py-3 shadow-lg backdrop-blur-md z-20">
         {status && (
           <div className="text-center sm:text-left flex-1 min-w-0">
             <Notice tone={status.tone}>{status.text}</Notice>

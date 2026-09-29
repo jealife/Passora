@@ -1,4 +1,5 @@
 import { getEventData } from "@/lib/data";
+import { eventTitle, eventTypeOf } from "@/lib/event-types";
 import { OG_SIZE, renderOgImage } from "@/lib/og-image";
 
 export const size = OG_SIZE;
@@ -7,12 +8,11 @@ export const contentType = "image/png";
 export async function generateImageMetadata({ params }) {
   const { slug } = await params;
   const { event } = await getEventData(slug);
-  const brideGroom = `${event.bride_name || "La mariée"} & ${event.groom_name || "Le marié"}`;
 
   return [
     {
       id: "og",
-      alt: `Invitation au mariage de ${brideGroom} : informations et confirmation de présence`,
+      alt: `${eventTypeOf(event).label} : ${eventTitle(event)}, informations et confirmation de présence`,
       size: OG_SIZE,
       contentType: "image/png",
     },

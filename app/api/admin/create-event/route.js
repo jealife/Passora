@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { findOrCreateUser, isEmail, jsonError, requireAgency } from "@/lib/admin-auth";
-import { LAYOUT_TEMPLATES } from "@/lib/layouts";
+import { DEFAULT_EVENT_TYPE, EVENT_TYPES, templatesFor } from "@/lib/event-types";
 import { isRateLimited } from "@/lib/rate-limit";
 
 /**
  * POST /api/admin/create-event — réservé à l'agence.
  *
- * Crée l'événement et, si besoin, le compte Supabase Auth du couple
- * propriétaire (même couple = même compte pour plusieurs événements).
+ * Crée l'événement (de n'importe quel type, voir lib/event-types.js) et,
+ * si besoin, le compte Supabase Auth du client propriétaire (même client =
+ * même compte pour plusieurs événements).
  */
 export async function POST(request) {
   if (await isRateLimited(request, "admin-create-event", 5, 60)) {
@@ -24,17 +25,22 @@ export async function POST(request) {
     return jsonError("Requête invalide.", 400);
   }
 
-  const brideName = String(body?.brideName || "").trim();
-  const groomName = String(body?.groomName || "").trim();
+  const type = EVENT_TYPES.find((t) => t.id === body?.eventType) || EVENT_TYPES[0];
+  const brideName = type.couple ? String(body?.brideName || "").trim() : "";
+  const groomName = type.couple ? String(body?.groomName || "").trim() : "";
+  const title = type.couple ? `Mariage de ${brideName} & ${groomName}` : String(body?.title || "").trim();
   const slug = String(body?.slug || "").trim();
   const ownerEmail = String(body?.ownerEmail || "").trim().toLowerCase();
-  const layoutTemplate = LAYOUT_TEMPLATES.some((t) => t.id === body?.layoutTemplate)
+  // Premier modèle du type par défaut ; aucun pour un type encore sans modèle.
+  const templates = templatesFor(type.id);
+  const layoutTemplate = templates.some((t) => t.id === body?.layoutTemplate)
     ? body.layoutTemplate
-    : LAYOUT_TEMPLATES[0].id;
+    : templates[0]?.id;
 
-  if (!brideName || !groomName || !slug || !ownerEmail) {
-    return jsonError("Merci de renseigner les deux prénoms, un lien et un email.", 400);
+  if (type.couple ? !brideName || !groomName : !title) {
+    return jsonError(type.couple ? "Merci de renseigner les deux prénoms." : "Merci de donner un nom à l'événement.", 400);
   }
+  if (!slug || !ownerEmail) return jsonError("Merci de renseigner un lien et un email.", 400);
   if (!isEmail(ownerEmail)) return jsonError("Adresse email invalide.", 400);
 
   try {
@@ -46,9 +52,11 @@ export async function POST(request) {
         slug,
         bride_name: brideName,
         groom_name: groomName,
-        name: `Mariage de ${brideName} & ${groomName}`,
+        name: title,
         owner_id: owner.id,
-        layout_template: layoutTemplate,
+        ...(layoutTemplate ? { layout_template: layoutTemplate } : {}),
+        // Colonne ajoutée par la migration 012 ; un mariage garde la valeur par défaut.
+        ...(type.id !== DEFAULT_EVENT_TYPE ? { event_type: type.id } : {}),
       })
       .select("slug")
       .single();

@@ -1,10 +1,11 @@
 "use client";
 
+import { eventTitle } from "@/lib/event-types";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { normalizeName } from "@/lib/utils";
 import { Button, IconAction, Message, PageHeader, SearchField, Tag } from "@/components/admin/agency/kit";
-import { coupleName, relativeTime } from "@/components/admin/agency/shared";
+import { relativeTime } from "@/components/admin/agency/shared";
 
 /**
  * Comptes de connexion (Supabase Auth) : rôle, événements confiés, dernière
@@ -18,7 +19,7 @@ export default function AccountsPanel({ data, session, openDialog }) {
     const q = normalizeName(query);
     if (!q) return data.users;
     return data.users.filter((user) =>
-      normalizeName(`${user.email} ${user.events.map(coupleName).join(" ")}`).includes(q),
+      normalizeName(`${user.email} ${user.events.map(eventTitle).join(" ")}`).includes(q),
     );
   }, [data.users, query]);
 
@@ -101,7 +102,7 @@ function AccountRow({ user, isSelf, now, openDialog }) {
                   href={`/admin/${event.slug}`}
                   className="rounded-sm border border-passora-ink/12 px-2 py-0.5 text-xs text-passora-ink/70 transition-colors hover:border-passora-ink hover:text-passora-ink"
                 >
-                  {coupleName(event)}
+                  {eventTitle(event)}
                 </Link>
               ))}
             </div>

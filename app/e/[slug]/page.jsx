@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
+import EventPreparing from "@/components/EventPreparing";
 import WeddingPage from "@/components/WeddingPage";
 import { DEFAULT_EVENT } from "@/lib/content";
 import { getEventData } from "@/lib/data";
+import { hasTemplate } from "@/lib/event-types";
 import { generateEventMetadata } from "@/lib/metadata";
 
 // Route multi-événements : chaque événement dispose de sa propre page
@@ -20,6 +22,9 @@ export default async function EventPage({ params }) {
 
   // Slug inconnu en base (hors événement de démonstration) : 404.
   if (data.isFallback && slug !== DEFAULT_EVENT.slug) notFound();
+
+  // Type d'événement sans modèle de page pour l'instant : page d'attente.
+  if (!hasTemplate(data.event)) return <EventPreparing event={data.event} />;
 
   return <WeddingPage data={data} />;
 }

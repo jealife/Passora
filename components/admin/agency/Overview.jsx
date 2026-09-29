@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import Icon from "@/components/ui/Icons";
+import { eventTitle } from "@/lib/event-types";
 import { classNames } from "@/lib/utils";
 import { Button, PageHeader, Panel } from "@/components/admin/agency/kit";
-import { countdownLabel, coupleName, percent } from "@/components/admin/agency/shared";
+import { countdownLabel, percent } from "@/components/admin/agency/shared";
 
 /**
  * Aperçu de supervision : chiffres clés de la plateforme (hors démos),
@@ -186,7 +187,7 @@ function UpcomingRow({ event, owner }) {
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-baseline justify-between gap-3">
-          <span className="truncate font-serif text-lg font-medium">{coupleName(event)}</span>
+          <span className="truncate font-serif text-lg font-medium">{eventTitle(event)}</span>
           <span className="shrink-0 text-xs font-medium text-passora-gold-deep">{countdownLabel(event)}</span>
         </span>
         <span className="mt-2 flex items-center gap-3">
@@ -213,7 +214,7 @@ function AlertRow({ alert, openDialog }) {
         aria-hidden="true"
       />
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-medium">{coupleName(alert.event)}</span>
+        <span className="block truncate text-sm font-medium">{eventTitle(alert.event)}</span>
         <span className="block text-xs leading-snug text-passora-ink/60">{alert.text}</span>
       </span>
       <Icon name="chevron-right" className="mt-1 h-4 w-4 shrink-0 text-passora-ink/25" />

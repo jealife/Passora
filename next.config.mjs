@@ -1,5 +1,15 @@
+import { readFileSync } from "node:fs";
+
+const { version } = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8"));
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Version de l'application (package.json) et date de mise en ligne,
+  // affichées dans l'onglet Plateforme du tableau de bord agence.
+  env: {
+    NEXT_PUBLIC_APP_VERSION: version,
+    NEXT_PUBLIC_BUILD_DATE: new Date().toISOString(),
+  },
   turbopack: {
     root: import.meta.dirname,
   },

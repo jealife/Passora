@@ -5,10 +5,11 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import Icon from "@/components/ui/Icons";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { eventInitials, eventTitle, eventTypeOf } from "@/lib/event-types";
 import { classNames } from "@/lib/utils";
 import { EASE } from "@/components/motion/primitives";
 import { Card } from "@/components/admin/ui";
-import { DesktopSectionNav, HeaderAction, MobileSectionNav } from "@/components/admin/SectionNav";
+import { HeaderAction, MobileSectionNav } from "@/components/admin/SectionNav";
 import WelcomeBanner from "@/components/admin/WelcomeBanner";
 import EventForm from "@/components/admin/EventForm";
 import ProgramManager from "@/components/admin/ProgramManager";
@@ -20,9 +21,9 @@ import SeatingManager from "@/components/admin/SeatingManager";
 import Scanner from "@/components/admin/Scanner";
 import AdminAuthGate, { FullPageLoader } from "@/components/admin/AuthGate";
 
-// Quatre destinations principales (barre du bas sur mobile, en-tête sur
-// grand écran) ; les écrans d'une même famille sont regroupés en
-// sous-onglets plutôt que d'être tous alignés au même niveau.
+// Quatre destinations principales ; les écrans d'une même famille sont
+// regroupés en sous-onglets. Barre latérale sur grand écran, barre du bas
+// et onglets sous l'en-tête sur mobile et tablette.
 const SECTIONS = [
   { key: "accueil", label: "Accueil", icon: "home" },
   {
@@ -57,9 +58,10 @@ function copyInviteLink(slug) {
 }
 
 /**
- * L'espace des mariés — administration d'UN événement (`/admin/[slug]`).
- * Accès protégé par Supabase Auth (comptes créés dans le tableau de bord
- * Supabase) ; toutes les écritures sont en outre verrouillées par RLS.
+ * L'espace client : administration d'UN événement (`/admin/[slug]`), la
+ * même pour tous les types d'événements (seul le vocabulaire s'adapte).
+ * Accès protégé par Supabase Auth ; toutes les écritures sont en outre
+ * verrouillées par RLS.
  */
 export default function EventAdmin({ slug }) {
   const supabase = getSupabaseBrowserClient();
@@ -70,7 +72,8 @@ export default function EventAdmin({ slug }) {
   );
 }
 
-function EventAdminContent({ supabase, slug, session }) {
+/** Contenu de l'espace client, une fois la session connue. */
+export function EventAdminContent({ supabase, slug, session }) {
   const [event, setEvent] = useState(undefined); // undefined = chargement, null = introuvable
   const [section, setSection] = useState("accueil");
   // Dernier sous-onglet ouvert dans chaque section, retrouvé en y revenant.
@@ -101,9 +104,12 @@ function EventAdminContent({ supabase, slug, session }) {
   const isOwner = event.owner_id === session.user.id;
   if (!isAgency && !isOwner) return <AccessDenied />;
 
-  const initials = `${(event.bride_name || "M")[0]} & ${(event.groom_name || "J")[0]}`;
+  const type = eventTypeOf(event);
+  const initials = eventInitials(event);
+  const title = type.couple ? `L'espace de ${initials.replace("&", " & ")}` : eventTitle(event);
   const current = SECTIONS.find((s) => s.key === section);
   const view = current.tabs ? subTabs[section] : section;
+  const signOut = () => supabase.auth.signOut();
 
   /** Ouvre un écran précis, qu'il soit une section ou un sous-onglet. */
   const goTo = (target) => {
@@ -111,104 +117,204 @@ function EventAdminContent({ supabase, slug, session }) {
     if (!owner) return;
     if (owner.tabs && owner.key !== target) setSubTabs((prev) => ({ ...prev, [owner.key]: target }));
     setSection(owner.key);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0 });
   };
 
   return (
     <div className="min-h-svh bg-linen">
-      <header className="sticky top-0 z-30 border-b border-cocoa/10 bg-cream/90 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-5">
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-passora-gold font-serif text-sm italic text-passora-ink">
-              {initials.replace(/ /g, "")}
-            </span>
-            <div className="min-w-0 md:hidden lg:block">
-              <p className="truncate font-serif text-base italic text-cocoa lg:text-lg">
-                L&apos;espace de {initials}
-              </p>
-              <Link
-                href="/admin"
-                className="hidden text-[0.6rem] font-medium uppercase tracking-[0.25em] text-cocoa/45 hover:text-cocoa/70 lg:block"
-              >
-                ← Tous les événements
-              </Link>
-            </div>
-          </div>
-
-          <DesktopSectionNav sections={SECTIONS} active={section} onSelect={goTo} />
-
-          <div className="flex shrink-0 items-center gap-1.5">
-            <CopyLinkButton slug={event.slug} />
-            <HeaderAction href={`/e/${event.slug}`} icon="external-link" label="Voir le site" />
-            <HeaderAction onClick={() => supabase.auth.signOut()} icon="log-out" label="Déconnexion" />
+      {/* ── Barre latérale (grand écran) ─────────────────────────────────── */}
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-cocoa/10 bg-cream lg:flex">
+        <div className="flex items-center gap-3 border-b border-cocoa/10 px-5 py-5">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-passora-gold font-serif text-sm italic text-passora-ink">
+            {initials}
+          </span>
+          <div className="min-w-0">
+            <p className="truncate font-serif text-lg leading-tight italic text-cocoa">{eventTitle(event)}</p>
+            <p className="mt-0.5 text-[0.6rem] font-medium tracking-[0.22em] text-cocoa/45 uppercase">{type.label}</p>
           </div>
         </div>
 
-        {current.tabs && (
-          <nav
-            className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-3 [scrollbar-width:none] sm:px-4 [&::-webkit-scrollbar]:hidden"
-            aria-label={current.label}
-          >
-            {current.tabs.map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => goTo(item.key)}
-                aria-current={view === item.key ? "page" : undefined}
-                className={classNames(
-                  "relative shrink-0 cursor-pointer px-3 pt-1 pb-3 text-sm transition-colors",
-                  view === item.key ? "font-medium text-cocoa" : "text-cocoa/50 hover:text-cocoa/80",
+        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4" aria-label="Sections">
+          {SECTIONS.map((item) => {
+            const active = section === item.key;
+            return (
+              <div key={item.key}>
+                <button
+                  type="button"
+                  onClick={() => goTo(item.key)}
+                  aria-current={active && !item.tabs ? "page" : undefined}
+                  className={classNames(
+                    "flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors",
+                    active ? "bg-white font-medium text-cocoa shadow-sm" : "text-cocoa/65 hover:bg-white/60 hover:text-cocoa",
+                  )}
+                >
+                  <Icon name={item.icon} className={classNames("h-4 w-4", active ? "text-passora-gold-deep" : "text-cocoa/40")} />
+                  {item.label}
+                </button>
+                {item.tabs && (
+                  <div className="mt-1 mb-2 ml-5 space-y-0.5 border-l border-cocoa/10 pl-3">
+                    {item.tabs.map((tab) => (
+                      <button
+                        key={tab.key}
+                        type="button"
+                        onClick={() => goTo(tab.key)}
+                        aria-current={view === tab.key ? "page" : undefined}
+                        className={classNames(
+                          "block w-full cursor-pointer rounded-lg px-3 py-1.5 text-left text-sm transition-colors",
+                          view === tab.key ? "font-medium text-passora-gold-deep" : "text-cocoa/55 hover:text-cocoa",
+                        )}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
                 )}
-              >
-                {item.label}
-                {view === item.key && (
-                  <motion.span
-                    layoutId={`admin-subtab-${current.key}`}
-                    className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-passora-gold-deep"
-                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                  />
-                )}
-              </button>
-            ))}
-          </nav>
-        )}
-      </header>
+              </div>
+            );
+          })}
+        </nav>
 
-      <InstallBanner initials={initials} />
+        <div className="space-y-0.5 border-t border-cocoa/10 px-3 py-3">
+          <SidebarCopyLink slug={event.slug} />
+          <SidebarAction href={`/e/${event.slug}`} external icon="external-link" label="Voir la page" />
+          {isAgency && <SidebarAction href="/admin" icon="chevron-left" label="Tous les événements" />}
+          <SidebarAction onClick={signOut} icon="log-out" label="Déconnexion" />
+        </div>
+      </aside>
 
-      <main className="mx-auto max-w-6xl px-4 pt-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))] sm:px-5 sm:pt-8 md:pb-12">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={view}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.25, ease: EASE }}
-          >
-            {view === "accueil" && (
-              <>
-                <WelcomeBanner supabase={supabase} event={event} onNavigate={goTo} />
-                <HomeShortcuts slug={event.slug} onNavigate={goTo} />
-              </>
-            )}
-            {view === "infos" && (
-              <EventForm supabase={supabase} event={event} onSaved={setEvent} isAgency={isAgency} />
-            )}
-            {view === "programme" && <ProgramManager supabase={supabase} eventId={event.id} />}
-            {view === "lieux" && <VenuesManager supabase={supabase} eventId={event.id} />}
-            {view === "galerie" && <GalleryManager supabase={supabase} eventId={event.id} />}
-            {view === "liste" && <GuestsManager supabase={supabase} eventId={event.id} />}
-            {view === "reponses" && <RsvpList supabase={supabase} eventId={event.id} />}
-            {view === "tables" && <SeatingManager supabase={supabase} event={event} />}
-            {view === "scanner" && <Scanner supabase={supabase} event={event} />}
-          </motion.div>
-        </AnimatePresence>
-      </main>
+      <div className="lg:pl-64">
+        {/* ── En-tête (mobile et tablette) ───────────────────────────────── */}
+        <header className="sticky top-0 z-30 border-b border-cocoa/10 bg-cream/90 backdrop-blur-md lg:hidden">
+          <div className="flex h-16 items-center justify-between gap-3 px-4 sm:px-5">
+            <div className="flex min-w-0 items-center gap-2.5">
+              {isAgency && (
+                <Link
+                  href="/admin"
+                  aria-label="Tous les événements"
+                  className="-ml-1 flex h-9 w-7 shrink-0 items-center justify-center text-cocoa/50 hover:text-cocoa"
+                >
+                  <Icon name="chevron-left" className="h-5 w-5" />
+                </Link>
+              )}
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-passora-gold font-serif text-sm italic text-passora-ink">
+                {initials}
+              </span>
+              <p className="min-w-0 truncate font-serif text-base italic text-cocoa">{title}</p>
+            </div>
+            <div className="flex shrink-0 items-center gap-1">
+              <CopyLinkButton slug={event.slug} />
+              <HeaderAction href={`/e/${event.slug}`} icon="external-link" label="Voir le site" />
+              <HeaderAction onClick={signOut} icon="log-out" label="Déconnexion" />
+            </div>
+          </div>
 
-      {/* Barre de navigation du bas (mobile) : 4 destinations seulement */}
+          {current.tabs && (
+            <nav
+              className="flex gap-1 overflow-x-auto px-3 [scrollbar-width:none] sm:px-4 [&::-webkit-scrollbar]:hidden"
+              aria-label={current.label}
+            >
+              {current.tabs.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => goTo(item.key)}
+                  aria-current={view === item.key ? "page" : undefined}
+                  className={classNames(
+                    "relative shrink-0 cursor-pointer px-3 pt-1 pb-3 text-sm transition-colors",
+                    view === item.key ? "font-medium text-cocoa" : "text-cocoa/50 hover:text-cocoa/80",
+                  )}
+                >
+                  {item.label}
+                  {view === item.key && (
+                    <motion.span
+                      layoutId={`admin-subtab-${current.key}`}
+                      className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-passora-gold-deep"
+                      transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                    />
+                  )}
+                </button>
+              ))}
+            </nav>
+          )}
+        </header>
+
+        <InstallBanner initials={initials} />
+
+        <main className="mx-auto max-w-5xl px-4 pt-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))] sm:px-5 sm:pt-8 lg:px-10 lg:pt-10 lg:pb-12">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={view}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25, ease: EASE }}
+            >
+              {view === "accueil" && (
+                <>
+                  <WelcomeBanner supabase={supabase} event={event} onNavigate={goTo} />
+                  <HomeShortcuts slug={event.slug} onNavigate={goTo} />
+                </>
+              )}
+              {view === "infos" && (
+                <EventForm supabase={supabase} event={event} onSaved={setEvent} isAgency={isAgency} />
+              )}
+              {view === "programme" && <ProgramManager supabase={supabase} eventId={event.id} />}
+              {view === "lieux" && <VenuesManager supabase={supabase} eventId={event.id} />}
+              {view === "galerie" && <GalleryManager supabase={supabase} eventId={event.id} />}
+              {view === "liste" && <GuestsManager supabase={supabase} eventId={event.id} />}
+              {view === "reponses" && <RsvpList supabase={supabase} eventId={event.id} />}
+              {view === "tables" && <SeatingManager supabase={supabase} event={event} />}
+              {view === "scanner" && <Scanner supabase={supabase} event={event} />}
+            </motion.div>
+          </AnimatePresence>
+        </main>
+      </div>
+
+      {/* Barre de navigation du bas (mobile et tablette) : 4 destinations */}
       <MobileSectionNav sections={SECTIONS} active={section} onSelect={goTo} />
     </div>
   );
+}
+
+/** Action du pied de la barre latérale (lien ou bouton). */
+function SidebarAction({ href, external, onClick, icon, label }) {
+  const className =
+    "flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2 text-left text-sm text-cocoa/60 transition-colors hover:bg-white/60 hover:text-cocoa";
+  const content = (
+    <>
+      <Icon name={icon} className="h-4 w-4 text-cocoa/40" />
+      {label}
+    </>
+  );
+  if (href && external) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
+        {content}
+      </a>
+    );
+  }
+  if (href) {
+    return (
+      <Link href={href} className={className}>
+        {content}
+      </Link>
+    );
+  }
+  return (
+    <button type="button" onClick={onClick} className={className}>
+      {content}
+    </button>
+  );
+}
+
+function SidebarCopyLink({ slug }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () =>
+    copyInviteLink(slug).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  return <SidebarAction onClick={copy} icon={copied ? "check" : "send"} label={copied ? "Lien copié" : "Copier le lien"} />;
 }
 
 /** Raccourcis de l'accueil : les tâches courantes, expliquées en une ligne. */
@@ -326,7 +432,7 @@ function InstallBanner({ initials }) {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 12 }}
         transition={{ duration: 0.4, ease: EASE }}
-        className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] left-4 right-4 z-50 flex items-start gap-3 rounded-2xl border border-passora-gold/25 bg-cream/95 px-4 py-3 shadow-lg backdrop-blur-md md:bottom-6 md:left-auto md:right-6 md:max-w-xs"
+        className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] left-4 right-4 z-50 flex items-start gap-3 rounded-2xl border border-passora-gold/25 bg-cream/95 px-4 py-3 shadow-lg backdrop-blur-md lg:bottom-6 lg:left-auto lg:right-6 lg:max-w-xs"
         role="status"
         aria-live="polite"
       >
@@ -334,7 +440,7 @@ function InstallBanner({ initials }) {
           className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-passora-gold font-serif text-xs italic text-passora-ink"
           aria-hidden="true"
         >
-          {initials.replace(/ /g, "")}
+          {initials}
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium text-cocoa">Ajouter à l’écran d’accueil</p>

@@ -14,7 +14,7 @@ import { Card, Field, Input, Notice } from "@/components/admin/ui";
  * Supabase) ; toutes les écritures sont en outre verrouillées par RLS.
  * Ne rend `children(session)` qu'une fois une session valide établie —
  * `session.user.id` et `session.user.app_metadata.role` servent à distinguer
- * un compte agence (accès à tout) d'un compte couple (son événement seul).
+ * un compte agence (accès à tout) d'un compte client (ses événements seuls).
  */
 export default function AdminAuthGate({ supabase, children }) {
   const [session, setSession] = useState(undefined); // undefined = chargement
@@ -113,9 +113,9 @@ function LoginForm({ supabase }) {
           >
             <PassoraLogo />
           </motion.div>
-          <p className="mt-4 font-serif text-2xl italic text-cocoa">Bienvenue chez vous</p>
+          <p className="mt-4 font-serif text-2xl italic text-cocoa">Bienvenue</p>
           <p className="mt-1.5 text-[0.68rem] font-medium uppercase tracking-[0.3em] text-cocoa/50">
-            L’espace des mariés
+            Espace client
           </p>
         </div>
         <Card>
@@ -145,13 +145,10 @@ function LoginForm({ supabase }) {
               className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-passora-gold px-5 py-3 text-xs font-medium uppercase tracking-[0.2em] text-passora-ink transition-colors hover:bg-passora-gold-deep disabled:opacity-50"
             >
               {busy && <Icon name="loader" className="h-4 w-4 animate-spin-slow" />}
-              Ouvrir notre espace
+              Se connecter
             </button>
           </form>
         </Card>
-        <p className="mt-6 text-center font-serif text-sm italic text-cocoa/50">
-          « Deux cœurs, une seule organisation. »
-        </p>
       </motion.div>
     </div>
   );

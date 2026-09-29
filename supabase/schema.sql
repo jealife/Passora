@@ -14,6 +14,8 @@
 create table if not exists public.events (
   id                   uuid primary key default gen_random_uuid(),
   slug                 text not null unique,
+  -- Type d'événement (voir migration 012 et lib/event-types.js).
+  event_type           text not null default 'wedding',
   name                 text not null default '',
   bride_name           text not null default '',
   groom_name           text not null default '',

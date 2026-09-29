@@ -4,9 +4,12 @@ import { DEMO_EVENT_SLUGS } from "@/lib/layouts";
  * Outils partagés par le tableau de bord de l'agence (`/admin`).
  */
 
-/** Champs des événements, avec les compteurs calculés par Supabase. */
-export const EVENT_FIELDS =
-  "id, slug, bride_name, groom_name, wedding_date, date_confirmed, layout_template, owner_id, hero_image_url, created_at, guests(count), rsvp(count), checked:rsvp(count), gallery(count)";
+/**
+ * Champs des événements, avec les compteurs calculés par Supabase. `*`
+ * plutôt qu'une liste : une colonne ajoutée par migration (ex. event_type)
+ * n'empêche jamais le chargement si la migration n'est pas encore passée.
+ */
+export const EVENT_FIELDS = "*, guests(count), rsvp(count), checked:rsvp(count), gallery(count)";
 
 const DAY = 86400000;
 
@@ -45,12 +48,6 @@ export function normalizeEvent(row, now) {
     daysLeft: time === null ? null : Math.ceil((time - now) / DAY),
   };
 }
-
-export const coupleName = (event) =>
-  [event.bride_name, event.groom_name].filter(Boolean).join(" & ") || event.slug;
-
-export const monogram = (event) =>
-  `${(event.bride_name || "?")[0]}&${(event.groom_name || "?")[0]}`.toUpperCase();
 
 /** "J-12", "Jour J", "Il y a 3 j"… */
 export function countdownLabel(event) {

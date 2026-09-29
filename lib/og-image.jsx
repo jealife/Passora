@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { eventTitle, eventTypeOf } from "@/lib/event-types";
 
 /**
  * Image OpenGraph générée à la volée (1200×630) : aperçu élégant du site
@@ -20,7 +21,9 @@ async function loadGoogleFont(family, text) {
 }
 
 export async function renderOgImage(event) {
-  const tagline = (event.tagline || "Nous nous disons oui").toUpperCase();
+  const type = eventTypeOf(event);
+  const title = eventTitle(event);
+  const tagline = (event.tagline || type.tagline).toUpperCase();
   const date = event.wedding_date ? new Date(event.wedding_date) : null;
   const dateLabel =
     date && !Number.isNaN(date.getTime())
@@ -36,7 +39,7 @@ export async function renderOgImage(event) {
   // en cas d'échec réseau, l'image est servie avec la police par défaut.
   let fonts;
   try {
-    const usedText = `${event.bride_name}${event.groom_name}&${dateLabel}`;
+    const usedText = `${title}&${dateLabel}`;
     fonts = [
       {
         name: "Cormorant Garamond",
@@ -126,40 +129,58 @@ export async function renderOgImage(event) {
           {tagline}
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            fontFamily: "Cormorant Garamond",
-            fontStyle: "italic",
-            fontSize: 74,
-            color: "#3e2a21",
-          }}
-        >
-          {event.bride_name}
-        </div>
-        <div
-          style={{
-            display: "flex",
-            fontFamily: "Cormorant Garamond",
-            fontStyle: "italic",
-            fontSize: 42,
-            color: "#b76950",
-            margin: "4px 0",
-          }}
-        >
-          &
-        </div>
-        <div
-          style={{
-            display: "flex",
-            fontFamily: "Cormorant Garamond",
-            fontStyle: "italic",
-            fontSize: 74,
-            color: "#3e2a21",
-          }}
-        >
-          {event.groom_name}
-        </div>
+        {type.couple ? (
+          <>
+          <div
+            style={{
+              display: "flex",
+              fontFamily: "Cormorant Garamond",
+              fontStyle: "italic",
+              fontSize: 74,
+              color: "#3e2a21",
+            }}
+          >
+            {event.bride_name}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              fontFamily: "Cormorant Garamond",
+              fontStyle: "italic",
+              fontSize: 42,
+              color: "#b76950",
+              margin: "4px 0",
+            }}
+          >
+            &
+          </div>
+          <div
+            style={{
+              display: "flex",
+              fontFamily: "Cormorant Garamond",
+              fontStyle: "italic",
+              fontSize: 74,
+              color: "#3e2a21",
+            }}
+          >
+            {event.groom_name}
+          </div>
+          </>
+        ) : (
+          <div
+            style={{
+              display: "flex",
+              fontFamily: "Cormorant Garamond",
+              fontStyle: "italic",
+              fontSize: 72,
+              color: "#3e2a21",
+              textAlign: "center",
+              maxWidth: 960,
+            }}
+          >
+            {title}
+          </div>
+        )}
 
         {/* Ornement : filet — cœur — filet */}
         <div

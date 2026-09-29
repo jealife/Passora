@@ -4,9 +4,10 @@ import { useMemo, useState } from "react";
 import Image from "next/image";
 import Icon from "@/components/ui/Icons";
 import { LAYOUT_TEMPLATES } from "@/lib/layouts";
+import { eventInitials, eventTitle, eventTypeOf, hasTemplate } from "@/lib/event-types";
 import { classNames, formatDateFr, normalizeName } from "@/lib/utils";
 import { Button, IconAction, Message, PageHeader, SearchField, Segmented, Tag } from "@/components/admin/agency/kit";
-import { countdownLabel, coupleName, monogram, percent } from "@/components/admin/agency/shared";
+import { countdownLabel, percent } from "@/components/admin/agency/shared";
 
 const FILTERS = [
   { key: "upcoming", label: "À venir" },
@@ -35,7 +36,7 @@ export default function EventsPanel({ data, usersById, openDialog, filter, onFil
       if (!matchesFilter(event, filter)) return false;
       if (!q) return true;
       const owner = usersById.get(event.owner_id)?.email || "";
-      return normalizeName(`${coupleName(event)} ${event.slug} ${owner}`).includes(q);
+      return normalizeName(`${eventTitle(event)} ${event.slug} ${owner}`).includes(q);
     });
     // Passés : du plus récent au plus ancien ; sinon, du plus proche au plus lointain.
     return filter === "past" ? [...list].reverse() : list;
@@ -113,12 +114,12 @@ function EventCard({ event, owner, openDialog }) {
           {event.hero_image_url ? (
             <Image src={event.hero_image_url} alt="" fill sizes="56px" className="object-cover" />
           ) : (
-            monogram(event)
+            eventInitials(event)
           )}
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
-            <h2 className="min-w-0 font-serif text-xl leading-tight font-medium">{coupleName(event)}</h2>
+            <h2 className="min-w-0 font-serif text-xl leading-tight font-medium">{eventTitle(event)}</h2>
             <StatusTag event={event} />
           </div>
           <p className="mt-1 text-xs text-passora-ink/55">
@@ -126,7 +127,8 @@ function EventCard({ event, owner, openDialog }) {
             {event.wedding_date && !event.date_confirmed && " (à confirmer)"}
           </p>
           <p className="mt-0.5 truncate text-xs text-passora-ink/40">
-            /e/{event.slug} · {layoutName(event.layout_template)}
+            {eventTypeOf(event).label} · {hasTemplate(event) ? layoutName(event.layout_template) : "page en préparation"} · /e/
+            {event.slug}
           </p>
         </div>
       </div>
