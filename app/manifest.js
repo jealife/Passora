@@ -14,18 +14,13 @@ export default function manifest() {
     orientation: "portrait-primary",
     background_color: "#faf6ef",
     theme_color: "#f2a61d",
+    // Logo Passora : versions "any" (coins arrondis du logo) et "maskable"
+    // (fond doré plein, "p" dans la zone sûre, pour les icônes adaptatives
+    // d'Android).
     icons: [
-      {
-        src: "/icons/pwa-192.png",
-        sizes: "192x192",
-        type: "image/png",
-      },
-      {
-        src: "/icons/pwa-512.png",
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "maskable",
-      },
+      { src: "/icons/passora-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icons/passora-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/icons/passora-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }

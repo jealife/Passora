@@ -13,7 +13,7 @@ export const metadata = {
     title: "Passora Admin",
   },
   icons: {
-    apple: "/icons/pwa-192.png",
+    apple: "/icons/apple-touch-icon.png",
   },
   manifest: "/manifest.webmanifest",
 };
