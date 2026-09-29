@@ -7,6 +7,7 @@ import FadeIn from "@/components/ui/FadeIn";
 import Icon from "@/components/ui/Icons";
 import Ornament from "@/components/ui/Ornament";
 import { EASE, FloatingHearts } from "@/components/motion/primitives";
+import { canSharePdf, downloadPdf, sharePdf, ticketFileName } from "@/lib/ticket-share";
 import { formatDateFr } from "@/lib/utils";
 
 /**
@@ -18,7 +19,7 @@ import { formatDateFr } from "@/lib/utils";
  * Une fois la présence confirmée, le billet PDF (QR code) est généré et
  * téléchargé aussitôt, avec la possibilité de le partager (WhatsApp…).
  */
-export default function Rsvp({ event }) {
+export default function Rsvp({ event, venueName = "" }) {
   const eventSlug = event.slug;
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
@@ -31,9 +32,14 @@ export default function Rsvp({ event }) {
   const [ticketFile, setTicketFile] = useState(null); // { bytes, filename }
   const [canShare, setCanShare] = useState(false);
   const ticketInfoRef = useRef(null); // { id, guestName } renvoyé par l'API
-  // Module PDF gardé sous la main : le partage doit partir directement du
-  // clic, sans attente, sinon certains navigateurs le refusent.
-  const pdfModuleRef = useRef(null);
+
+  // Le générateur (polices, photo, bibliothèques PDF) n'est chargé qu'à
+  // l'envoi du formulaire, avec ses ressources, en parallèle de la requête.
+  const loadTicketModule = () =>
+    import("@/lib/ticket-pdf").then((pdf) => {
+      pdf.loadTicketAssets(event).catch(() => {});
+      return pdf;
+    });
 
   const prepareTicket = async (modulePromise, autoDownload) => {
     const info = ticketInfoRef.current;
@@ -41,30 +47,27 @@ export default function Rsvp({ event }) {
     setTicketStatus("building");
     try {
       const pdf = await modulePromise;
-      pdfModuleRef.current = pdf;
       const bytes = await pdf.buildTicketPdf({
         event,
+        venueName,
         rsvp: { id: info.id, guest_name: info.guestName },
       });
-      const filename = pdf.ticketFileName(info.guestName);
+      const filename = ticketFileName(info.guestName);
       setTicketFile({ bytes, filename });
-      setCanShare(pdf.canSharePdf());
+      setCanShare(canSharePdf());
       setTicketStatus("ready");
-      if (autoDownload) pdf.downloadPdf(bytes, filename);
+      if (autoDownload) downloadPdf(bytes, filename);
     } catch {
       setTicketStatus("error");
     }
   };
 
-  const downloadTicket = () =>
-    pdfModuleRef.current?.downloadPdf(ticketFile.bytes, ticketFile.filename);
+  const downloadTicket = () => downloadPdf(ticketFile.bytes, ticketFile.filename);
 
+  // Appelé directement dans le clic, sans attente : certains navigateurs
+  // refusent sinon d'ouvrir la feuille de partage.
   const shareTicket = () =>
-    pdfModuleRef.current?.sharePdf(
-      ticketFile.bytes,
-      ticketFile.filename,
-      `Billet · ${event.bride_name} & ${event.groom_name}`,
-    );
+    sharePdf(ticketFile.bytes, ticketFile.filename, `Billet · ${event.bride_name} & ${event.groom_name}`);
 
   const [suggestions, setSuggestions] = useState([]);
   const [highlighted, setHighlighted] = useState(-1);
@@ -137,7 +140,7 @@ export default function Rsvp({ event }) {
     setFeedback("");
 
     // Chargé en parallèle de l'envoi : le billet est prêt dès la confirmation.
-    const pdfModule = import("@/lib/ticket-pdf");
+    const pdfModule = loadTicketModule();
     pdfModule.catch(() => {});
 
     try {
@@ -284,7 +287,7 @@ export default function Rsvp({ event }) {
                         size="sm"
                         variant="outline"
                         icon="refresh"
-                        onClick={() => prepareTicket(import("@/lib/ticket-pdf"), true)}
+                        onClick={() => prepareTicket(loadTicketModule(), true)}
                         className="mt-4"
                       >
                         Réessayer

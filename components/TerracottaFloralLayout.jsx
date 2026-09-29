@@ -80,7 +80,7 @@ export default function TerracottaFloralLayout({ data }) {
         {showDressCode && <DressCode event={event} />}
         {showGifts && <Gifts event={event} />}
         {showGuestNotes && <GuestNotes event={event} />}
-        <Rsvp event={event} />
+        <Rsvp event={event} venueName={venues[0]?.name || ""} />
         <Footer event={event} />
       </main>
     </WelcomeProvider>

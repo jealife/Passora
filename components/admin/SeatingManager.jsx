@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Card, IconButton, Input, Notice } from "@/components/admin/ui";
 import { LoaderCard } from "@/components/admin/ProgramManager";
 import TableInput from "@/components/admin/TableInput";
-import { buildTicketPdf, canSharePdf, downloadPdf, sharePdf, ticketFileName } from "@/lib/ticket-pdf";
+import { canSharePdf, downloadPdf, sharePdf, ticketFileName } from "@/lib/ticket-share";
 import { classNames, normalizeName } from "@/lib/utils";
 
 /**
@@ -21,21 +21,23 @@ export default function SeatingManager({ supabase, event }) {
   const [onlyUnassigned, setOnlyUnassigned] = useState(false);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(null); // { id, action } pendant la génération d'un billet
+  const [venueName, setVenueName] = useState(""); // premier lieu, imprimé sur le billet
   // L'admin n'est rendu que côté navigateur : `navigator` est disponible ici.
   const [canShare] = useState(() => typeof navigator !== "undefined" && canSharePdf());
 
   useEffect(() => {
-    supabase
-      .from("rsvp")
-      .select("id, guest_id, guest_name, guests(table_label)")
-      .eq("event_id", event.id)
-      .order("guest_name", { ascending: true })
-      .then(({ data, error: loadError }) => {
-        if (loadError) setError(`Chargement impossible : ${loadError.message}`);
-        setRows(
-          (data || []).map(({ guests, ...row }) => ({ ...row, table_label: guests?.table_label || "" })),
-        );
-      });
+    Promise.all([
+      supabase
+        .from("rsvp")
+        .select("id, guest_id, guest_name, guests(table_label)")
+        .eq("event_id", event.id)
+        .order("guest_name", { ascending: true }),
+      supabase.from("venues").select("name").eq("event_id", event.id).order("sort_order").limit(1),
+    ]).then(([{ data, error: loadError }, venues]) => {
+      if (loadError) setError(`Chargement impossible : ${loadError.message}`);
+      setRows((data || []).map(({ guests, ...row }) => ({ ...row, table_label: guests?.table_label || "" })));
+      setVenueName(venues.data?.[0]?.name || "");
+    });
   }, [supabase, event.id]);
 
   const byTable = useMemo(() => {
@@ -68,7 +70,10 @@ export default function SeatingManager({ supabase, event }) {
   const sendTicket = async (row, action) => {
     setBusy({ id: row.id, action });
     try {
-      const bytes = await buildTicketPdf({ event, rsvp: row });
+      // Générateur chargé à la demande ; polices et photo restent en cache
+      // pour les billets suivants.
+      const { buildTicketPdf } = await import("@/lib/ticket-pdf");
+      const bytes = await buildTicketPdf({ event, rsvp: row, venueName });
       const filename = ticketFileName(row.guest_name);
       if (action === "share") await sharePdf(bytes, filename, `Billet · ${row.guest_name}`);
       else downloadPdf(bytes, filename);

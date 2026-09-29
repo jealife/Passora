@@ -57,7 +57,7 @@ export default function ClassicLayout({ data }) {
         {showProgram && <Program program={program} />}
         {showVenues && <Venues venues={venues} />}
         <MarqueeBand event={event} />
-        <Rsvp event={event} />
+        <Rsvp event={event} venueName={venues[0]?.name || ""} />
         <Footer event={event} />
       </main>
     </WelcomeProvider>
